@@ -20,7 +20,7 @@ export default function LoginPage() {
 
   if (loading) return <div style={{minHeight:'100vh',backgroundColor:'#EFECEA'}} />
 
-  async function handleLogin(e) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setSubmitting(true)
     setError('')
