@@ -1,32 +1,59 @@
 'use client'
 
-import { useAuth } from '../context'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { signOut } from 'firebase/auth'
 import { auth } from '../firebase'
+import { useAuth } from '../context'
+import { useRouter } from 'next/navigation'
 
 export default function HomePage() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    if (!loading && !user) {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (mounted && !loading && !user) {
       router.push('/')
     }
-  }, [user, loading, router])
+  }, [user, loading, router, mounted])
 
-  if (typeof window === 'undefined') return null
-  if (loading || !user) return null
+  if (!mounted || loading || !user) return null
 
   return (
-    <div className="min-h-screen bg-[#EFECEA] flex items-center justify-center p-6">
-      <div className="text-center">
-        <h1 className="font-serif text-3xl text-[#18181A] mb-2">You're in 💚</h1>
-        <p className="text-sm text-[#6B6B6E] mb-8">Logged in as {user.email}</p>
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#EFECEA',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '24px'
+    }}>
+      <div style={{ textAlign: 'center' }}>
+        <h1 style={{
+          fontFamily: 'Georgia, serif',
+          fontSize: '32px',
+          color: '#18181A',
+          marginBottom: '8px'
+        }}>
+          You're in 💚
+        </h1>
+        <p style={{ fontSize: '14px', color: '#6B6B6E', marginBottom: '32px' }}>
+          Logged in as {user.email}
+        </p>
         <button
           onClick={() => signOut(auth).then(() => router.push('/'))}
-          className="text-sm text-[#F68233] font-medium"
+          style={{
+            fontSize: '14px',
+            color: '#F68233',
+            fontWeight: '500',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer'
+          }}
         >
           Sign out
         </button>
