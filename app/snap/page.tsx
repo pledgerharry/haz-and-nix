@@ -6,6 +6,7 @@ import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore'
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useEffect, useState, useRef } from 'react'
 import Nav from '../components/Nav'
+import PageHeader from '../components/PageHeader'
 
 const HARRY_EMAIL = 'harrypledger@hotmail.com'
 const TODAY = new Date().toISOString().split('T')[0]
@@ -83,48 +84,29 @@ export default function SnapPage() {
   const bothPosted = !!(mySnap && otherSnap)
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#F7F5F1', fontFamily: 'system-ui,sans-serif', paddingBottom: '80px' }}>
-      <div style={{ padding: '16px 20px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={() => router.back()} style={{ width: '32px', height: '32px', borderRadius: '10px', backgroundColor: '#E4E1DB', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </button>
-          <h1 style={{ fontFamily: 'Georgia,serif', fontSize: '21px', color: '#18181A' }}>Daily snap</h1>
-        </div>
-        {!mySnap && (
-          <button onClick={() => setShowForm(true)} style={{ backgroundColor: '#263322', color: '#F68233', border: 'none', borderRadius: '12px', padding: '8px 14px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
-            Post snap 📸
-          </button>
-        )}
-      </div>
+    <div style={{ minHeight: '100vh', backgroundColor: '#F7F5F1', fontFamily: 'system-ui,sans-serif', paddingBottom: '80px', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 56px)' }}>
+      <PageHeader title="Daily snap" right={!mySnap ? <button onClick={() => setShowForm(true)} style={{backgroundColor:'#263322',color:'#F68233',border:'none',borderRadius:'12px',padding:'8px 14px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>Post snap 📸</button> : undefined} />
 
-      <div style={{ padding: '0 16px' }}>
+      <div style={{padding:'0 16px'}}>
+        <input ref={fileInput} type="file" accept="image/*,video/*" onChange={pickFile} style={{display:'none'}} />
         {showForm && !mySnap && (
-          <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '16px', border: '1px solid rgba(0,0,0,0.07)', marginBottom: '14px' }}>
-            <div style={{ fontSize: '11px', color: '#ADADB3', marginBottom: '10px' }}>Today's snap</div>
-            <input type="file" accept="image/*" ref={fileInput} onChange={pickFile} style={{ display: 'none' }} />
-            {preview ? (
-              <>
-                <img src={preview} alt="" style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '10px', marginBottom: '8px' }} />
-                <button onClick={() => fileInput.current?.click()} style={{ width: '100%', backgroundColor: '#F7F5F1', color: '#ADADB3', border: 'none', borderRadius: '10px', padding: '8px', fontSize: '11px', cursor: 'pointer', marginBottom: '10px' }}>
-                  Change photo
-                </button>
-              </>
+          <div style={{backgroundColor:'#fff',borderRadius:'16px',padding:'14px 16px',border:'1px solid rgba(0,0,0,0.07)',marginBottom:'14px'}}>
+            <div style={{fontSize:'13px',fontWeight:'600',color:'#18181A',marginBottom:'10px'}}>Post today's snap</div>
+            {!preview ? (
+              <div onClick={() => fileInput.current?.click()} style={{border:'2px dashed #E4E1DB',borderRadius:'12px',padding:'24px',textAlign:'center',cursor:'pointer',marginBottom:'10px',color:'#ADADB3',fontSize:'13px'}}>
+                Tap to choose a photo or video
+              </div>
             ) : (
-              <div onClick={() => fileInput.current?.click()} style={{ width: '100%', height: '180px', backgroundColor: '#F7F5F1', borderRadius: '10px', border: '1.5px dashed #E4E1DB', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginBottom: '10px', gap: '6px' }}>
-                <span style={{ fontSize: '32px' }}>📸</span>
-                <span style={{ fontSize: '12px', color: '#ADADB3' }}>Tap to pick a photo</span>
+              <div style={{marginBottom:'10px',borderRadius:'12px',overflow:'hidden',maxHeight:'200px'}}>
+                {file?.type.startsWith('video/')
+                  ? <video src={preview} controls style={{width:'100%',maxHeight:'200px',objectFit:'cover'}} />
+                  : <img src={preview} alt="" style={{width:'100%',maxHeight:'200px',objectFit:'cover'}} />}
               </div>
             )}
-            <input
-              value={caption}
-              onChange={e => setCaption(e.target.value)}
-              placeholder="Caption (optional)..."
-              style={{ width: '100%', backgroundColor: '#F7F5F1', border: '1.5px solid #E4E1DB', borderRadius: '11px', padding: '10px 12px', fontSize: '13px', color: '#18181A', fontFamily: 'system-ui', outline: 'none', boxSizing: 'border-box', marginBottom: '10px' }}
-            />
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => { setShowForm(false); setPreview(null); setFile(null) }} style={{ flex: 1, backgroundColor: '#F7F5F1', color: '#ADADB3', border: 'none', borderRadius: '11px', padding: '11px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={uploadSnap} disabled={!file || uploading} style={{ flex: 2, backgroundColor: '#263322', color: '#F68233', border: 'none', borderRadius: '11px', padding: '11px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', opacity: !file || uploading ? 0.5 : 1 }}>
+            <input value={caption} onChange={e => setCaption(e.target.value)} placeholder="Add a caption..." style={{width:'100%',backgroundColor:'#F7F5F1',border:'1.5px solid #E4E1DB',borderRadius:'11px',padding:'10px 12px',fontSize:'13px',color:'#18181A',outline:'none',marginBottom:'10px',boxSizing:'border-box',fontFamily:'system-ui'}} />
+            <div style={{display:'flex',gap:'8px'}}>
+              <button onClick={() => { setShowForm(false); setPreview(null); setFile(null); setCaption('') }} style={{flex:1,padding:'12px',borderRadius:'12px',fontSize:'13px',border:'1.5px solid #E4E1DB',backgroundColor:'transparent',color:'#6B6B6E',cursor:'pointer'}}>Cancel</button>
+              <button onClick={uploadSnap} disabled={uploading || !file} style={{flex:2,padding:'12px',borderRadius:'12px',fontSize:'13px',fontWeight:'600',border:'none',backgroundColor:'#263322',color:'#F68233',cursor:'pointer',opacity:uploading||!file?0.5:1}}>
                 {uploading ? 'Uploading...' : 'Post'}
               </button>
             </div>

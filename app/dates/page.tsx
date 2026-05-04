@@ -1,10 +1,10 @@
 'use client'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '../context'
 import { db } from '../firebase'
 import { collection, addDoc, onSnapshot, orderBy, query, updateDoc, doc, serverTimestamp } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
 import Nav from '../components/Nav'
+import PageHeader from '../components/PageHeader'
 
 const HARRY_EMAIL = 'harrypledger@hotmail.com'
 
@@ -14,8 +14,17 @@ const inp: React.CSSProperties = {
   outline: 'none', marginBottom: '8px', boxSizing: 'border-box', fontFamily: 'system-ui',
 }
 
+const SUGGESTIONS = [
+  'Mini golf 🏌️','Picnic in the park 🧺','Cooking class 👨‍🍳','Wine tasting 🍷',
+  'Cinema & dinner 🎬','Day trip to the coast 🌊','Escape room 🔐','Pottery class 🏺',
+  'Botanical gardens 🌿','Comedy night 😂','Stargazing picnic 🌟','Museum day 🏛️',
+  'Spa day 🧖','Farmers market 🥕','Board game café 🎲','Ice skating ⛸️',
+  'Kayaking 🚣','Street food market 🌮','Drive-in movie 🚗','Art gallery + cocktails 🎨',
+  'Bowling 🎳','Sunrise hike 🌄','Afternoon tea ☕','Go-karting 🏎️',
+  'Axe throwing 🪓','Gin distillery tour 🫙','Live jazz night 🎷','Pottery painting 🎨',
+]
+
 export default function DatesPage() {
-  const router = useRouter()
   const { user } = useAuth()
   const [dates, setDates] = useState<any[]>([])
   const [tab, setTab] = useState<'pending'|'approved'|'done'>('pending')
@@ -30,10 +39,9 @@ export default function DatesPage() {
 
   useEffect(() => {
     const q = query(collection(db, 'dates'), orderBy('createdAt', 'desc'))
-    const unsub = onSnapshot(q, snap => {
+    return onSnapshot(q, snap => {
       setDates(snap.docs.map(d => ({ id: d.id, ...d.data() })))
     })
-    return unsub
   }, [])
 
   function startAdd() {
@@ -70,14 +78,10 @@ export default function DatesPage() {
   const filtered = dates.filter(d => d.status === tab)
 
   return (
-    <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'80px'}}>
-      <div style={{padding:'16px 20px 0',display:'flex',alignItems:'center',gap:'12px',marginBottom:'12px'}}>
-        <button onClick={() => router.back()} style={{width:'32px',height:'32px',borderRadius:'10px',backgroundColor:'#E4E1DB',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </button>
-        <h1 style={{fontFamily:'Georgia,serif',fontSize:'21px',color:'#18181A'}}>Date wishlist</h1>
-        <button onClick={startAdd} style={{marginLeft:'auto',width:'32px',height:'32px',borderRadius:'10px',backgroundColor:'#263322',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#F68233',fontSize:'22px',fontWeight:'300',lineHeight:'1'}}>+</button>
-      </div>
+    <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'80px',paddingTop:'calc(env(safe-area-inset-top, 0px) + 56px)'}}>
+      <PageHeader title="Date wishlist" right={
+        <button onClick={startAdd} style={{width:'32px',height:'32px',borderRadius:'10px',backgroundColor:'#263322',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#F68233',fontSize:'22px',fontWeight:'300',lineHeight:'1'}}>+</button>
+      } />
 
       <div style={{display:'flex',gap:'6px',padding:'0 16px 12px',overflowX:'auto'}}>
         {(['pending','approved','done'] as const).map(t => (
@@ -88,9 +92,39 @@ export default function DatesPage() {
       </div>
 
       <div style={{padding:'0 16px'}}>
-        {filtered.length === 0 && (
+        {adding && (
+          <div style={{backgroundColor:'#fff',borderRadius:'16px',padding:'14px 16px',border:'1px solid rgba(0,0,0,0.07)',marginBottom:'12px'}}>
+            <div style={{fontSize:'13px',fontWeight:'600',color:'#18181A',marginBottom:'10px'}}>{editingId ? 'Edit date idea' : 'Add a date idea'}</div>
+
+            {!editingId && (
+              <>
+                <div style={{fontSize:'11px',color:'#ADADB3',marginBottom:'7px'}}>Suggestions</div>
+                <div style={{display:'flex',gap:'6px',flexWrap:'wrap',marginBottom:'12px'}}>
+                  {SUGGESTIONS.map(s => (
+                    <button key={s} onClick={() => setTitle(s)} style={{padding:'5px 10px',borderRadius:'100px',fontSize:'11px',fontWeight:'500',border:'none',cursor:'pointer',backgroundColor:title===s?'#263322':'#F7F5F1',color:title===s?'#F68233':'#6B6B6E',whiteSpace:'nowrap'}}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="What's the idea?" style={inp} />
+            <input value={location} onChange={e => setLocation(e.target.value)} placeholder="Location (Cambridge, London...)" style={inp} />
+            <input value={desc} onChange={e => setDesc(e.target.value)} placeholder="Tell them a bit more (optional)" style={{...inp, marginBottom:'12px'}} />
+            <div style={{display:'flex',gap:'8px'}}>
+              <button onClick={cancelForm} style={{flex:1,padding:'12px',borderRadius:'12px',fontSize:'13px',border:'1.5px solid #E4E1DB',backgroundColor:'transparent',color:'#6B6B6E',cursor:'pointer'}}>Cancel</button>
+              <button onClick={saveDate} disabled={saving||!title.trim()} style={{flex:2,padding:'12px',borderRadius:'12px',fontSize:'13px',fontWeight:'600',border:'none',backgroundColor:'#263322',color:'#F68233',cursor:'pointer',opacity:saving||!title.trim()?0.5:1}}>
+                {saving ? 'Saving...' : editingId ? 'Save changes' : 'Add idea'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {filtered.length === 0 && !adding && (
           <div style={{textAlign:'center',color:'#ADADB3',fontSize:'14px',marginTop:'40px'}}>No {tab} dates yet</div>
         )}
+
         {filtered.map(date => (
           <div key={date.id} style={{backgroundColor:'#fff',borderRadius:'16px',padding:'14px 16px',border:'1px solid rgba(0,0,0,0.07)',marginBottom:'10px'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:'8px'}}>
@@ -115,21 +149,6 @@ export default function DatesPage() {
             )}
           </div>
         ))}
-
-        <div style={{height:'16px'}}></div>
-
-        {adding && (
-          <div style={{backgroundColor:'#fff',borderRadius:'16px',padding:'14px 16px',border:'1px solid rgba(0,0,0,0.07)'}}>
-            <div style={{fontSize:'13px',fontWeight:'500',color:'#18181A',marginBottom:'12px'}}>{editingId ? 'Edit date idea' : 'Add a date idea'}</div>
-            <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="What's the idea?" style={inp} />
-            <input value={location} onChange={e=>setLocation(e.target.value)} placeholder="Location (Cambridge, London...)" style={inp} />
-            <input value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Tell them a bit more (optional)" style={{...inp, marginBottom:'12px'}} />
-            <div style={{display:'flex',gap:'8px'}}>
-              <button onClick={cancelForm} style={{flex:1,padding:'12px',borderRadius:'12px',fontSize:'13px',border:'1.5px solid #E4E1DB',backgroundColor:'transparent',color:'#6B6B6E',cursor:'pointer'}}>Cancel</button>
-              <button onClick={saveDate} disabled={saving||!title.trim()} style={{flex:2,padding:'12px',borderRadius:'12px',fontSize:'13px',fontWeight:'600',border:'none',backgroundColor:'#263322',color:'#F68233',cursor:'pointer',opacity:saving||!title.trim()?0.5:1}}>{saving?'Saving...':(editingId?'Save changes':'Add idea')}</button>
-            </div>
-          </div>
-        )}
       </div>
       <Nav />
     </div>

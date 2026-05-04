@@ -201,26 +201,28 @@ export default function HomePage() {
   ]
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#F7F5F1', fontFamily: 'system-ui,sans-serif' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#F7F5F1', fontFamily: 'system-ui,sans-serif', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 56px)' }}>
 
-      {/* Header */}
-      <div style={{ padding: '16px 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-          <img src="/logo.svg" alt="" style={{ width: '34px', height: '34px', borderRadius: '9px', display: 'block' }} />
-          <span style={{ fontFamily: 'Georgia,serif', fontSize: '21px', color: '#18181A', letterSpacing: '-0.3px', lineHeight: '1' }}>Haz <em style={{ color: '#F68233', fontStyle: 'italic' }}>&amp;</em> Nix</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <div style={{ width: '30px', height: '30px', borderRadius: '50%', border: '2.5px solid #F7F5F1', overflow: 'hidden', boxShadow: '0 0 0 1px rgba(0,0,0,0.12)', zIndex: 2 }}>
-              <img src="/harry-icon.svg" alt="Harry" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            </div>
-            <div style={{ width: '30px', height: '30px', borderRadius: '50%', border: '2.5px solid #F7F5F1', overflow: 'hidden', boxShadow: '0 0 0 1px rgba(0,0,0,0.12)', marginLeft: '-8px', zIndex: 1 }}>
-              <img src="/nicole-icon.svg" alt="Nicole" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            </div>
+      {/* Fixed Header */}
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: '#F7F5F1', paddingTop: 'env(safe-area-inset-top, 0px)', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+        <div style={{ padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+            <img src="/logo.svg" alt="" style={{ width: '30px', height: '30px', borderRadius: '8px', display: 'block' }} />
+            <span style={{ fontFamily: 'Georgia,serif', fontSize: '19px', color: '#18181A', letterSpacing: '-0.3px', lineHeight: '1' }}>Haz <em style={{ color: '#F68233', fontStyle: 'italic' }}>&amp;</em> Nix</span>
           </div>
-          <button onClick={() => signOut(auth).then(() => router.push('/'))} style={{ fontSize: '12px', color: '#ADADB3', background: 'none', border: 'none', cursor: 'pointer' }}>
-            Sign out
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div style={{ width: '28px', height: '28px', borderRadius: '50%', border: '2px solid #F7F5F1', overflow: 'hidden', boxShadow: '0 0 0 1px rgba(0,0,0,0.12)', zIndex: 2 }}>
+                <img src="/harry-icon.svg" alt="Harry" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              </div>
+              <div style={{ width: '28px', height: '28px', borderRadius: '50%', border: '2px solid #F7F5F1', overflow: 'hidden', boxShadow: '0 0 0 1px rgba(0,0,0,0.12)', marginLeft: '-7px', zIndex: 1 }}>
+                <img src="/nicole-icon.svg" alt="Nicole" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              </div>
+            </div>
+            <button onClick={() => signOut(auth).then(() => router.push('/'))} style={{ fontSize: '12px', color: '#ADADB3', background: 'none', border: 'none', cursor: 'pointer' }}>
+              Sign out
+            </button>
+          </div>
         </div>
       </div>
 

@@ -1,11 +1,11 @@
 'use client'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '../context'
 import { db, storage } from '../firebase'
 import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp } from 'firebase/firestore'
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useEffect, useState, useRef } from 'react'
 import Nav from '../components/Nav'
+import PageHeader from '../components/PageHeader'
 
 const HARRY_EMAIL = 'harrypledger@hotmail.com'
 const WAVE_HEIGHTS = [8, 14, 20, 12, 18, 10, 16, 8, 14, 18, 10, 12]
@@ -14,45 +14,30 @@ function fmt(s: number) {
   return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
 }
 
-function Waveform({ playing, id }: { playing: boolean; id: string }) {
+function Waveform({ playing }: { playing: boolean; id: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '2px', height: '20px' }}>
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', height: '20px', overflow: 'hidden' }}>
       {WAVE_HEIGHTS.map((h, i) => (
-        <div
-          key={i}
-          className={playing ? `wv-${id}-${i}` : ''}
-          style={{
-            width: '3px',
-            borderRadius: '2px',
-            backgroundColor: '#F68233',
-            height: `${h}px`,
-            opacity: playing ? 1 : 0.3,
-            animation: playing ? `wavePulse 0.7s ease-in-out ${i * 0.06}s infinite` : 'none',
-            transformOrigin: 'center',
-          }}
-        />
+        <div key={i} style={{ width: '2.5px', borderRadius: '2px', backgroundColor: '#F68233', height: `${Math.round(h * 0.75)}px`, opacity: playing ? 1 : 0.3, animation: playing ? `wavePulse 0.7s ease-in-out ${i * 0.06}s infinite` : 'none', transformOrigin: 'center' }} />
       ))}
     </div>
   )
 }
 
 export default function NotesPage() {
-  const router = useRouter()
   const { user } = useAuth()
   const [notes, setNotes] = useState<any[]>([])
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
-
   const [recording, setRecording] = useState(false)
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
   const [recAudioUrl, setRecAudioUrl] = useState<string | null>(null)
   const [recSeconds, setRecSeconds] = useState(0)
   const [audioDuration, setAudioDuration] = useState(0)
+  const [playingId, setPlayingId] = useState<string | null>(null)
   const mediaRecRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  const [playingId, setPlayingId] = useState<string | null>(null)
   const audioElRef = useRef<HTMLAudioElement | null>(null)
 
   const isHarry = user?.email === HARRY_EMAIL
@@ -140,15 +125,8 @@ export default function NotesPage() {
   const canSend = !sending && (!!text.trim() || !!audioBlob)
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#F7F5F1', fontFamily: 'system-ui,sans-serif', paddingBottom: '80px' }}>
-      <style>{`@keyframes wavePulse{0%,100%{transform:scaleY(0.4)}50%{transform:scaleY(1)}}`}</style>
-
-      <div style={{ padding: '16px 20px 0', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-        <button onClick={() => router.back()} style={{ width: '32px', height: '32px', borderRadius: '10px', backgroundColor: '#E4E1DB', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        </button>
-        <h1 style={{ fontFamily: 'Georgia,serif', fontSize: '21px', color: '#18181A' }}>Love notes</h1>
-      </div>
+    <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'80px',paddingTop:'calc(env(safe-area-inset-top, 0px) + 56px)'}}>
+      <PageHeader title="Love notes" />
 
       <div style={{ padding: '0 16px 16px' }}>
         <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '14px 16px', border: '1px solid rgba(0,0,0,0.07)', marginBottom: '16px' }}>
@@ -206,15 +184,13 @@ export default function NotesPage() {
                     ? <svg width="8" height="8" fill="#fff" viewBox="0 0 10 10"><rect x="1" y="1" width="3" height="8" rx="1" /><rect x="6" y="1" width="3" height="8" rx="1" /></svg>
                     : <svg width="8" height="8" fill="#fff" viewBox="0 0 10 10"><path d="M2 1l7 4-7 4V1z" /></svg>}
                 </button>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', height: '16px', overflow: 'hidden' }}>
-                  {WAVE_HEIGHTS.map((h, i) => (
-                    <div key={i} style={{ width: '2.5px', borderRadius: '2px', backgroundColor: '#F68233', height: `${Math.round(h * 0.75)}px`, opacity: playingId === note.id ? 1 : 0.3, animation: playingId === note.id ? `wavePulse 0.7s ease-in-out ${i * 0.06}s infinite` : 'none', transformOrigin: 'center' }} />
-                  ))}
-                </div>
+                <Waveform playing={playingId === note.id} id={note.id} />
                 {note.voiceDuration != null && <span style={{ fontSize: '10px', color: '#ADADB3', flexShrink: 0 }}>{fmt(note.voiceDuration)}</span>}
               </div>
             )}
-            <div style={{ fontSize: '10px', color: '#ADADB3', marginTop: '6px' }}>{note.createdAt?.toDate?.()?.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) ?? 'Just now'}</div>
+            <div style={{ fontSize: '10px', color: '#ADADB3', marginTop: '6px' }}>
+              {note.createdAt?.toDate?.()?.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) ?? 'Just now'}
+            </div>
           </div>
         ))}
       </div>

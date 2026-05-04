@@ -1,6 +1,7 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import Nav from '../components/Nav'
+import PageHeader from '../components/PageHeader'
 
 export default function MorePage() {
   const router = useRouter()
@@ -39,10 +40,8 @@ export default function MorePage() {
   )
 
   return (
-    <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'80px'}}>
-      <div style={{padding:'16px 20px 16px'}}>
-        <h1 style={{fontFamily:'Georgia,serif',fontSize:'21px',color:'#18181A'}}>More</h1>
-      </div>
+    <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'80px',paddingTop:'calc(env(safe-area-inset-top, 0px) + 56px)'}}>
+      <PageHeader title="More" showBack={false} />
       <div style={{padding:'0 16px'}}>
         <SectionLabel label="🎮 Games & fun" />
         {games.map(g => <Row key={g.href} {...g} />)}

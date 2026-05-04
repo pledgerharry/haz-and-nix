@@ -9,8 +9,3 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
-body {
-  /* Shift content below the status bar when running as a PWA with
-     black-translucent status bar. Falls back to 0 in a normal browser. */
-  padding-top: env(safe-area-inset-top, 0px);
-}
