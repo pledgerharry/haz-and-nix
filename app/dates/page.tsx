@@ -76,6 +76,37 @@ const POOL: Sugg[] = [
   { title: 'Axe throwing', location: 'London / Cambridge', desc: 'Surprisingly therapeutic and competitive. Great for a midweek evening.', tags: ['experience', 'adventure', 'fun'] },
   { title: 'Rooftop bar night', location: 'London', desc: 'Peckham Levels, Roof East, Seabird, or Madison — London has incredible rooftop bars.', tags: ['experience', 'food', 'romantic', 'london'] },
   { title: 'Karaoke night', location: 'London / Cambridge', desc: 'A private karaoke room for two. No audience, no shame, just fun.', tags: ['experience', 'fun'] },
+  // East Anglia
+  { title: 'Holkham Beach & Wells-next-the-Sea', location: 'North Norfolk', desc: 'One of England\'s most beautiful beaches — vast, wild, and backed by pines. Then fish & chips in Wells.', tags: ['east_anglia', 'outdoors', 'food', 'romantic'] },
+  { title: 'Blakeney seal boat trip', location: 'Blakeney, Norfolk', desc: 'Board a boat from Blakeney Quay to see hundreds of grey seals basking on Blakeney Point.', tags: ['east_anglia', 'outdoors', 'adventure'] },
+  { title: 'Cromer crab & pier', location: 'Cromer, Norfolk', desc: 'Famous for its crabs — eat a dressed crab on the Victorian pier. Bracing, brilliant, very Norfolk.', tags: ['east_anglia', 'food', 'outdoors'] },
+  { title: 'Southwold & Adnams', location: 'Southwold, Suffolk', desc: 'Charming seaside town, pastel beach huts, the Adnams brewery, and a proper seaside pub lunch.', tags: ['east_anglia', 'food', 'outdoors', 'relaxed'] },
+  { title: 'Lavenham medieval village', location: 'Lavenham, Suffolk', desc: 'The most complete medieval wool town in England. Wonky timber-framed buildings and zero tourists midweek.', tags: ['east_anglia', 'culture', 'outdoors'] },
+  { title: 'Norwich Cathedral & the Lanes', location: 'Norwich', desc: 'Beautiful Norman cathedral, brilliant indie shops in the Lanes, and a genuinely great food scene.', tags: ['east_anglia', 'culture', 'food'] },
+  { title: 'Bury St Edmunds & abbey ruins', location: 'Bury St Edmunds, Suffolk', desc: 'Handsome market town with ruined abbey gardens, a great market, and excellent pubs.', tags: ['east_anglia', 'culture', 'food'] },
+  { title: 'Norfolk Broads day boat', location: 'Wroxham / Potter Heigham', desc: 'Hire a small motor cruiser for a day and pootle through the reed-lined waterways. Peaceful and totally unique.', tags: ['east_anglia', 'outdoors', 'relaxed', 'adventure'] },
+  // South London & SE England (from Croydon)
+  { title: 'Box Hill walk & pub', location: 'Surrey Hills', desc: 'One of the best walks in SE England — steep climb to the top, views across the Weald, pub at the bottom.', tags: ['south_east', 'outdoors', 'food'] },
+  { title: 'Dulwich Picture Gallery', location: 'Dulwich, SE London', desc: 'England\'s oldest public art gallery, designed by Sir John Soane. Small, beautiful, and free most of the time.', tags: ['south_london', 'culture', 'relaxed'] },
+  { title: 'Margate — Turner & Dreamland', location: 'Margate, Kent', desc: 'The Turner Contemporary, the revived Dreamland fairground, brilliant new restaurants, and a great beach. Kent\'s coolest town.', tags: ['south_east', 'culture', 'food', 'fun'] },
+  { title: 'Canterbury Cathedral & old town', location: 'Canterbury, Kent', desc: 'One of England\'s great Gothic cathedrals, a beautiful medieval city, and great restaurants in the old streets.', tags: ['south_east', 'culture', 'food'] },
+  { title: 'Hastings Old Town & fish', location: 'Hastings, East Sussex', desc: 'Bohemian old town, the highest concentration of independent shops in the UK, fish straight off the boats.', tags: ['south_east', 'food', 'culture', 'outdoors'] },
+  { title: 'Folkestone Creative Quarter', location: 'Folkestone, Kent', desc: 'Clifftop walks, a thriving arts quarter, the best chip shop in Kent, and White Cliffs views.', tags: ['south_east', 'culture', 'outdoors'] },
+  { title: 'Dungeness', location: 'Dungeness, Kent', desc: 'The most otherworldly place in England — a vast shingle desert, Derek Jarman\'s garden, two lighthouses. Eerie and unforgettable.', tags: ['south_east', 'outdoors', 'culture', 'adventure'] },
+  { title: 'Epsom Derby day', location: 'Epsom Downs, Surrey', desc: '30 mins from Croydon — get dressed up and have a flutter at one of England\'s great race meetings.', tags: ['south_east', 'south_london', 'fun', 'culture'] },
+  // UK curveballs
+  { title: 'Bristol harbourside & Clifton', location: 'Bristol', desc: 'Clifton Suspension Bridge, the harbourside food scene, Banksy\'s home turf, and some of the best restaurants outside London. 2h from either of you.', tags: ['uk_city', 'food', 'culture', 'outdoors'] },
+  { title: 'Manchester — Northern Quarter', location: 'Manchester', desc: 'The Northern Quarter\'s independent bars and restaurants, a match at Old Trafford or the Etihad, incredible food. 2.5h by train.', tags: ['uk_city', 'food', 'culture', 'fun'] },
+  { title: 'York — Shambles & walls', location: 'York', desc: 'Walk the medieval city walls, get lost in The Shambles, and eat at one of England\'s best independent food scenes.', tags: ['uk_city', 'culture', 'food', 'romantic'] },
+  { title: 'Liverpool — Albert Dock & culture', location: 'Liverpool', desc: 'The Beatles Story, Tate Liverpool, the Albert Dock, and the warmest city in England. 3h from either of you.', tags: ['uk_city', 'culture', 'food', 'fun'] },
+  { title: 'Hay-on-Wye book town', location: 'Hay-on-Wye, Wales', desc: 'The world\'s second-hand bookshop capital — dozens of shops, a small castle, and the Brecon Beacons on your doorstep.', tags: ['wales', 'culture', 'outdoors', 'relaxed'] },
+  { title: 'Pembrokeshire coast', location: 'Pembrokeshire, Wales', desc: 'Barafundle Bay, Freshwater West, St David\'s Cathedral — arguably the best coastline in Britain. Worth every mile of the drive.', tags: ['wales', 'outdoors', 'adventure', 'romantic'] },
+  { title: 'Snowdonia & zip wire', location: 'Snowdonia, Wales', desc: 'Climb Snowdon or take the railway, then hurtle down Zip World — the fastest zip wire in the world.', tags: ['wales', 'outdoors', 'adventure'] },
+  { title: 'Bristol to Bath day', location: 'Bristol / Bath', desc: 'Train to Bristol for the morning, bus to Bath for the afternoon — Thermae Spa, Roman Baths, great dinner.', tags: ['uk_city', 'culture', 'food', 'relaxed'] },
+  { title: 'Bruges day trip', location: 'Bruges, Belgium', desc: 'St Pancras → Eurostar to Brussels, train to Bruges — 2.5h door-to-door. Medieval canals, waffles, Belgian beer, chocolate.', tags: ['europe', 'culture', 'food', 'romantic'] },
+  { title: 'Porto & wine', location: 'Porto, Portugal', desc: 'Budget flights from Stansted, Douro riverfront, port wine lodges, and the most beautiful azulejo tiles anywhere.', tags: ['europe', 'culture', 'food', 'romantic'] },
+  { title: 'Glastonbury Tor & Cheddar Gorge', location: 'Somerset', desc: 'Climb Glastonbury Tor at sunrise, then explore the dramatic Cheddar Gorge. Otherworldly and underrated.', tags: ['uk_day', 'outdoors', 'adventure', 'culture'] },
+  { title: 'Portsmouth Historic Dockyard', location: 'Portsmouth', desc: 'HMS Victory, the Mary Rose, Spinnaker Tower views — a brilliant day out by the sea.', tags: ['uk_day', 'culture', 'outdoors'] },
 ]
 
 type Decisions = { dismissed: string[]; likedTags: string[]; dislikedTags: string[] }
