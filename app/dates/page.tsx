@@ -8,12 +8,19 @@ import Nav from '../components/Nav'
 
 const HARRY_EMAIL = 'harrypledger@hotmail.com'
 
+const inp: React.CSSProperties = {
+  width: '100%', backgroundColor: '#F7F5F1', border: '1.5px solid #E4E1DB',
+  borderRadius: '11px', padding: '10px 12px', fontSize: '13px', color: '#18181A',
+  outline: 'none', marginBottom: '8px', boxSizing: 'border-box', fontFamily: 'system-ui',
+}
+
 export default function DatesPage() {
   const router = useRouter()
   const { user } = useAuth()
   const [dates, setDates] = useState<any[]>([])
   const [tab, setTab] = useState<'pending'|'approved'|'done'>('pending')
   const [adding, setAdding] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [title, setTitle] = useState('')
   const [location, setLocation] = useState('')
   const [desc, setDesc] = useState('')
@@ -29,18 +36,31 @@ export default function DatesPage() {
     return unsub
   }, [])
 
-  async function addDate() {
+  function startAdd() {
+    setTitle(''); setLocation(''); setDesc(''); setEditingId(null); setAdding(true)
+  }
+
+  function startEdit(date: any) {
+    setTitle(date.title || ''); setLocation(date.location || ''); setDesc(date.desc || '')
+    setEditingId(date.id); setAdding(true)
+  }
+
+  function cancelForm() {
+    setAdding(false); setEditingId(null); setTitle(''); setLocation(''); setDesc('')
+  }
+
+  async function saveDate() {
     if (!title.trim() || !user) return
     setSaving(true)
-    await addDoc(collection(db, 'dates'), {
-      title: title.trim(),
-      location: location.trim(),
-      desc: desc.trim(),
-      addedBy: isHarry ? 'Harry' : 'Nicole',
-      status: 'pending',
-      createdAt: serverTimestamp()
-    })
-    setTitle(''); setLocation(''); setDesc(''); setAdding(false); setSaving(false)
+    if (editingId) {
+      await updateDoc(doc(db, 'dates', editingId), { title: title.trim(), location: location.trim(), desc: desc.trim() })
+    } else {
+      await addDoc(collection(db, 'dates'), {
+        title: title.trim(), location: location.trim(), desc: desc.trim(),
+        addedBy: isHarry ? 'Harry' : 'Nicole', status: 'pending', createdAt: serverTimestamp()
+      })
+    }
+    cancelForm(); setSaving(false)
   }
 
   async function updateStatus(id: string, status: string) {
@@ -56,6 +76,7 @@ export default function DatesPage() {
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </button>
         <h1 style={{fontFamily:'Georgia,serif',fontSize:'21px',color:'#18181A'}}>Date wishlist</h1>
+        <button onClick={startAdd} style={{marginLeft:'auto',width:'32px',height:'32px',borderRadius:'10px',backgroundColor:'#263322',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#F68233',fontSize:'22px',fontWeight:'300',lineHeight:'1'}}>+</button>
       </div>
 
       <div style={{display:'flex',gap:'6px',padding:'0 16px 12px',overflowX:'auto'}}>
@@ -73,10 +94,13 @@ export default function DatesPage() {
         {filtered.map(date => (
           <div key={date.id} style={{backgroundColor:'#fff',borderRadius:'16px',padding:'14px 16px',border:'1px solid rgba(0,0,0,0.07)',marginBottom:'10px'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:'8px'}}>
-              <div>
+              <div style={{flex:1}}>
                 <div style={{fontSize:'14px',fontWeight:'500',color:'#18181A'}}>{date.title}</div>
                 {date.location && <div style={{fontSize:'11px',color:'#ADADB3',marginTop:'3px'}}>📍 {date.location} · Added by {date.addedBy}</div>}
               </div>
+              <button onClick={() => startEdit(date)} style={{background:'none',border:'none',cursor:'pointer',padding:'2px 6px',color:'#ADADB3',display:'flex',alignItems:'center',flexShrink:0}}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M10 2l2 2-7 7H3V9l7-7z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
               <div style={{fontSize:'10px',fontWeight:'600',padding:'3px 9px',borderRadius:'100px',backgroundColor:'#F68233',color:'#263322',flexShrink:0,whiteSpace:'nowrap'}}>{date.status}</div>
             </div>
             {date.desc && <div style={{fontSize:'12px',color:'#6B6B6E',lineHeight:'1.55',marginTop:'8px'}}>{date.desc}</div>}
@@ -94,19 +118,17 @@ export default function DatesPage() {
 
         <div style={{height:'16px'}}></div>
 
-        {adding ? (
+        {adding && (
           <div style={{backgroundColor:'#fff',borderRadius:'16px',padding:'14px 16px',border:'1px solid rgba(0,0,0,0.07)'}}>
-            <div style={{fontSize:'13px',fontWeight:'500',color:'#18181A',marginBottom:'12px'}}>Add a date idea</div>
-            <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="What's the idea?" style={{width:'100%',backgroundColor:'#F7F5F1',border:'1.5px solid #E4E1DB',borderRadius:'11px',padding:'10px 12px',fontSize:'13px',color:'#18181A',outline:'none',marginBottom:'8px',boxSizing:'border-box'}} />
-            <input value={location} onChange={e=>setLocation(e.target.value)} placeholder="Location (Cambridge, London...)" style={{width:'100%',backgroundColor:'#F7F5F1',border:'1.5px solid #E4E1DB',borderRadius:'11px',padding:'10px 12px',fontSize:'13px',color:'#18181A',outline:'none',marginBottom:'8px',boxSizing:'border-box'}} />
-            <input value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Tell them a bit more (optional)" style={{width:'100%',backgroundColor:'#F7F5F1',border:'1.5px solid #E4E1DB',borderRadius:'11px',padding:'10px 12px',fontSize:'13px',color:'#18181A',outline:'none',marginBottom:'12px',boxSizing:'border-box'}} />
+            <div style={{fontSize:'13px',fontWeight:'500',color:'#18181A',marginBottom:'12px'}}>{editingId ? 'Edit date idea' : 'Add a date idea'}</div>
+            <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="What's the idea?" style={inp} />
+            <input value={location} onChange={e=>setLocation(e.target.value)} placeholder="Location (Cambridge, London...)" style={inp} />
+            <input value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Tell them a bit more (optional)" style={{...inp, marginBottom:'12px'}} />
             <div style={{display:'flex',gap:'8px'}}>
-              <button onClick={()=>setAdding(false)} style={{flex:1,padding:'12px',borderRadius:'12px',fontSize:'13px',border:'1.5px solid #E4E1DB',backgroundColor:'transparent',color:'#6B6B6E',cursor:'pointer'}}>Cancel</button>
-              <button onClick={addDate} disabled={saving||!title.trim()} style={{flex:2,padding:'12px',borderRadius:'12px',fontSize:'13px',fontWeight:'600',border:'none',backgroundColor:'#263322',color:'#F68233',cursor:'pointer',opacity:saving||!title.trim()?0.5:1}}>{saving?'Adding...':'Add idea'}</button>
+              <button onClick={cancelForm} style={{flex:1,padding:'12px',borderRadius:'12px',fontSize:'13px',border:'1.5px solid #E4E1DB',backgroundColor:'transparent',color:'#6B6B6E',cursor:'pointer'}}>Cancel</button>
+              <button onClick={saveDate} disabled={saving||!title.trim()} style={{flex:2,padding:'12px',borderRadius:'12px',fontSize:'13px',fontWeight:'600',border:'none',backgroundColor:'#263322',color:'#F68233',cursor:'pointer',opacity:saving||!title.trim()?0.5:1}}>{saving?'Saving...':(editingId?'Save changes':'Add idea')}</button>
             </div>
           </div>
-        ) : (
-          <button onClick={()=>setAdding(true)} style={{width:'100%',backgroundColor:'#F68233',color:'#263322',border:'none',borderRadius:'14px',padding:'14px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>＋ Add a date idea</button>
         )}
       </div>
       <Nav />

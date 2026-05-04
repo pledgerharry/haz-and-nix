@@ -31,6 +31,10 @@ export default function MemoriesPage() {
     return unsub
   }, [])
 
+  function isVideo(m: any) {
+    return m.mediaType?.startsWith('video/') || m.url?.match(/\.(mp4|mov|webm|avi|m4v)(\?|$)/i)
+  }
+
   function pickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
     if (!f) return
@@ -50,6 +54,7 @@ export default function MemoriesPage() {
         caption: caption.trim(),
         from: user.email,
         fromName: isHarry ? 'Harry' : 'Nicole',
+        mediaType: file.type,
         createdAt: serverTimestamp(),
       })
       setCaption('')
@@ -73,7 +78,9 @@ export default function MemoriesPage() {
     <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'80px'}}>
       {lightbox && (
         <div onClick={() => setLightbox(null)} style={{position:'fixed',inset:0,backgroundColor:'rgba(0,0,0,0.92)',zIndex:200,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'20px'}}>
-          <img src={lightbox.url} alt="" style={{maxWidth:'100%',maxHeight:'72vh',borderRadius:'12px',objectFit:'contain'}} />
+          {isVideo(lightbox)
+            ? <video src={lightbox.url} controls playsInline style={{maxWidth:'100%',maxHeight:'72vh',borderRadius:'12px'}} />
+            : <img src={lightbox.url} alt="" style={{maxWidth:'100%',maxHeight:'72vh',borderRadius:'12px',objectFit:'contain'}} />}
           {lightbox.caption && <div style={{color:'#F0EDE6',fontSize:'14px',marginTop:'14px',textAlign:'center',fontStyle:'italic'}}>"{lightbox.caption}"</div>}
           <div style={{color:'#6A9B63',fontSize:'11px',marginTop:'8px'}}>{lightbox.fromName} · {lightbox.createdAt?.toDate?.()?.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
         </div>
@@ -95,7 +102,9 @@ export default function MemoriesPage() {
             <div style={{fontSize:'11px',color:'#ADADB3',marginBottom:'10px'}}>Add a memory</div>
             <input type="file" accept="image/*,video/*" ref={fileInput} onChange={pickFile} style={{display:'none'}} />
             {preview ? (
-              <img src={preview} alt="" style={{width:'100%',height:'200px',objectFit:'cover',borderRadius:'10px',marginBottom:'10px'}} />
+              file?.type.startsWith('video/')
+                ? <video src={preview} muted playsInline style={{width:'100%',height:'200px',objectFit:'cover',borderRadius:'10px',marginBottom:'10px'}} />
+                : <img src={preview} alt="" style={{width:'100%',height:'200px',objectFit:'cover',borderRadius:'10px',marginBottom:'10px'}} />
             ) : (
               <div onClick={() => fileInput.current?.click()} style={{width:'100%',height:'160px',backgroundColor:'#F7F5F1',borderRadius:'10px',border:'1.5px dashed #E4E1DB',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',cursor:'pointer',marginBottom:'10px',gap:'6px'}}>
                 <span style={{fontSize:'28px'}}>📸</span>
@@ -125,7 +134,14 @@ export default function MemoriesPage() {
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px'}}>
           {memories.map(m => (
             <div key={m.id} onClick={() => setLightbox(m)} style={{borderRadius:'12px',overflow:'hidden',cursor:'pointer',aspectRatio:'1',position:'relative',backgroundColor:'#E4E1DB'}}>
-              <img src={m.url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+              {isVideo(m)
+                ? <video src={m.url} muted playsInline preload="metadata" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                : <img src={m.url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />}
+              {isVideo(m) && (
+                <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:'32px',height:'32px',borderRadius:'50%',backgroundColor:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  <svg width="12" height="12" fill="#fff" viewBox="0 0 10 10"><path d="M2 1l7 4-7 4V1z"/></svg>
+                </div>
+              )}
               <div style={{position:'absolute',bottom:0,left:0,right:0,background:'linear-gradient(transparent,rgba(0,0,0,0.5))',padding:'20px 8px 7px'}}>
                 <div style={{fontSize:'10px',fontWeight:'600',color:'rgba(255,255,255,0.9)'}}>{m.fromName}</div>
               </div>

@@ -49,7 +49,7 @@ export default function Nav() {
   const path = usePathname()
 
   return (
-    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', borderTop: '1px solid rgba(0,0,0,0.07)', padding: '9px 4px 22px', display: 'flex', justifyContent: 'space-around', zIndex: 100 }}>
+    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', borderTop: '1px solid rgba(0,0,0,0.07)', paddingTop: '9px', paddingLeft: '4px', paddingRight: '4px', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))', display: 'flex', justifyContent: 'space-around', zIndex: 100 }}>
       {ITEMS.map(item => {
         const active = path === item.href
         return (

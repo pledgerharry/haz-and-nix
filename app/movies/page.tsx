@@ -26,6 +26,8 @@ export default function MoviesPage() {
   const [tab, setTab] = useState<'towatch' | 'watched'>('towatch')
   const [title, setTitle] = useState('')
   const [adding, setAdding] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editTitle, setEditTitle] = useState('')
   const [saving, setSaving] = useState(false)
   const seededRef = useRef(false)
 
@@ -67,6 +69,12 @@ export default function MoviesPage() {
     setTitle('')
     setAdding(false)
     setSaving(false)
+  }
+
+  async function saveEditTitle() {
+    if (!editTitle.trim() || !editingId) return
+    await updateDoc(doc(db, 'movies', editingId), { title: editTitle.trim() })
+    setEditingId(null); setEditTitle('')
   }
 
   async function markWatched(id: string) {
@@ -132,6 +140,13 @@ export default function MoviesPage() {
 
         {list.map(m => (
           <div key={m.id} style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '13px 14px', border: '1px solid rgba(0,0,0,0.07)', marginBottom: '8px' }}>
+            {editingId === m.id ? (
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input value={editTitle} onChange={e => setEditTitle(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') saveEditTitle(); if (e.key === 'Escape') { setEditingId(null); setEditTitle('') } }} autoFocus style={{ flex: 1, backgroundColor: '#F7F5F1', border: '1.5px solid #E4E1DB', borderRadius: '10px', padding: '8px 10px', fontSize: '13px', color: '#18181A', outline: 'none', fontFamily: 'system-ui' }} />
+                <button onClick={saveEditTitle} style={{ padding: '8px 12px', backgroundColor: '#263322', color: '#F68233', border: 'none', borderRadius: '8px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>Save</button>
+                <button onClick={() => { setEditingId(null); setEditTitle('') }} style={{ padding: '8px', background: 'none', border: 'none', cursor: 'pointer', color: '#ADADB3', fontSize: '16px' }}>×</button>
+              </div>
+            ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ width: '34px', height: '34px', borderRadius: '10px', backgroundColor: m.watched ? 'rgba(38,51,34,0.1)' : 'rgba(246,130,51,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '17px', flexShrink: 0 }}>🎬</div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -139,11 +154,17 @@ export default function MoviesPage() {
                 <div style={{ fontSize: '10px', color: '#ADADB3', marginTop: '2px' }}>Added by {m.addedByName}</div>
               </div>
               {!m.watched && (
+                <button onClick={() => { setEditingId(m.id); setEditTitle(m.title) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#ADADB3', display: 'flex', alignItems: 'center' }}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M10 2l2 2-7 7H3V9l7-7z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </button>
+              )}
+              {!m.watched && (
                 <button onClick={() => markWatched(m.id)} style={{ padding: '5px 10px', backgroundColor: '#263322', color: '#F68233', border: 'none', borderRadius: '8px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>
                   Watched ✓
                 </button>
               )}
             </div>
+            )}
             {m.watched && (
               <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <span style={{ fontSize: '10px', color: '#ADADB3', marginRight: '4px' }}>Rating:</span>
