@@ -78,7 +78,7 @@ export default function WyrPage() {
   }
 
   return (
-    <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'80px',paddingTop:'calc(env(safe-area-inset-top, 0px) + 56px)'}}>
+    <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'calc(80px + env(safe-area-inset-bottom, 0px))',paddingTop:'calc(env(safe-area-inset-top, 0px) + 56px)'}}>
       <PageHeader title="Would you rather" />
 
       <div style={{padding:'0 16px'}}>

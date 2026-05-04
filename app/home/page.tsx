@@ -312,7 +312,7 @@ export default function HomePage() {
       )}
 
       {/* Feed cards */}
-      <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '10px', paddingBottom: '100px' }}>
+      <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '10px', paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
         {feedCards.map(card => (
           <div
             key={card.href}

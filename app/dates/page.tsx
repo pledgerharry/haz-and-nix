@@ -78,7 +78,7 @@ export default function DatesPage() {
   const filtered = dates.filter(d => d.status === tab)
 
   return (
-    <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'80px',paddingTop:'calc(env(safe-area-inset-top, 0px) + 56px)'}}>
+    <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'calc(80px + env(safe-area-inset-bottom, 0px))',paddingTop:'calc(env(safe-area-inset-top, 0px) + 56px)'}}>
       <PageHeader title="Date wishlist" right={
         <button onClick={startAdd} style={{width:'32px',height:'32px',borderRadius:'10px',backgroundColor:'#263322',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#F68233',fontSize:'22px',fontWeight:'300',lineHeight:'1'}}>+</button>
       } />

@@ -79,7 +79,7 @@ export default function MemoriesPage() {
   }
 
   return (
-    <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'80px',paddingTop:'calc(env(safe-area-inset-top, 0px) + 56px)'}}>
+    <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'calc(80px + env(safe-area-inset-bottom, 0px))',paddingTop:'calc(env(safe-area-inset-top, 0px) + 56px)'}}>
       {lightbox && (
         <div onClick={() => setLightbox(null)} style={{position:'fixed',inset:0,backgroundColor:'rgba(0,0,0,0.92)',zIndex:200,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'20px'}}>
           {lightboxIsVideo
@@ -146,7 +146,7 @@ export default function MemoriesPage() {
           {memories.map(m => (
             <div key={m.id} onClick={() => { setLightbox(m); setLightboxIsVideo(isVideo(m)) }} style={{borderRadius:'12px',overflow:'hidden',cursor:'pointer',aspectRatio:'1',position:'relative',backgroundColor:'#E4E1DB'}}>
               {isVideo(m)
-                ? <video src={m.url} muted playsInline preload="metadata" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                ? <video src={m.url} muted playsInline preload="metadata" onLoadedMetadata={e => { (e.target as HTMLVideoElement).currentTime = 0.001 }} style={{width:'100%',height:'100%',objectFit:'cover'}} />
                 : <img src={m.url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />}
               {isVideo(m) && (
                 <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:'32px',height:'32px',borderRadius:'50%',backgroundColor:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center'}}>
