@@ -10,8 +10,8 @@ const HARRY_EMAIL = 'harrypledger@hotmail.com'
 
 const TODAY = new Date().toISOString().split('T')[0]
 
-const QUESTION = "If you could only eat one cuisine forever, what would it be and why?"
-const FACT = "🧠 The average person makes about 35,000 decisions a day — most of them about food."
+const DEFAULT_QUESTION = "If you could only eat one cuisine forever, what would it be and why?"
+const DEFAULT_FACT = "🧠 The average person makes about 35,000 decisions a day — most of them about food."
 
 export default function QuestionPage() {
   const router = useRouter()
@@ -21,6 +21,8 @@ export default function QuestionPage() {
   const otherKey = isHarry ? 'nicoleAnswer' : 'harryAnswer'
   const otherName = isHarry ? 'Nicole' : 'Harry'
 
+  const [question, setQuestion] = useState(DEFAULT_QUESTION)
+  const [fact, setFact] = useState(DEFAULT_FACT)
   const [myAnswer, setMyAnswer] = useState('')
   const [otherAnswer, setOtherAnswer] = useState('')
   const [saved, setSaved] = useState(false)
@@ -32,6 +34,8 @@ export default function QuestionPage() {
     const unsub = onSnapshot(ref, snap => {
       if (snap.exists()) {
         const data = snap.data()
+        if (data.question) setQuestion(data.question)
+        if (data.fact) setFact(data.fact)
         if (data[myKey]) { setMyAnswer(data[myKey]); setSaved(true) }
         if (data[otherKey]) setOtherAnswer(data[otherKey])
         if (data.harryAnswer && data.nicoleAnswer) setBothAnswered(true)
@@ -46,7 +50,7 @@ export default function QuestionPage() {
     const ref = doc(db, 'questions', TODAY)
     const snap = await getDoc(ref)
     const existing = snap.exists() ? snap.data() : {}
-    await setDoc(ref, { ...existing, [myKey]: myAnswer.trim(), question: QUESTION, date: TODAY })
+    await setDoc(ref, { ...existing, [myKey]: myAnswer.trim(), question, date: TODAY })
     setSaved(true)
     setSaving(false)
   }
@@ -63,8 +67,8 @@ export default function QuestionPage() {
       <div style={{padding:'0 16px'}}>
         <div style={{backgroundColor:'#1E2B1C',borderRadius:'20px',padding:'20px',marginBottom:'14px',textAlign:'center'}}>
           <div style={{fontSize:'10px',fontWeight:'600',letterSpacing:'0.1em',textTransform:'uppercase',color:'#6A9B63',marginBottom:'10px'}}>{new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}</div>
-          <div style={{fontFamily:'Georgia,serif',fontSize:'19px',color:'#F0EDE6',lineHeight:'1.38',fontStyle:'italic'}}>"{QUESTION}"</div>
-          <div style={{marginTop:'13px',paddingTop:'13px',borderTop:'1px solid rgba(255,255,255,0.08)',fontSize:'11px',color:'#6A9B63',lineHeight:'1.55'}}>{FACT}</div>
+          <div style={{fontFamily:'Georgia,serif',fontSize:'19px',color:'#F0EDE6',lineHeight:'1.38',fontStyle:'italic'}}>"{question}"</div>
+          <div style={{marginTop:'13px',paddingTop:'13px',borderTop:'1px solid rgba(255,255,255,0.08)',fontSize:'11px',color:'#6A9B63',lineHeight:'1.55'}}>{fact}</div>
         </div>
 
         <div style={{backgroundColor:'#fff',borderRadius:'16px',padding:'14px 16px',border:'1px solid rgba(0,0,0,0.07)',marginBottom:'10px'}}>
