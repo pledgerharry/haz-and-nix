@@ -56,11 +56,22 @@ export default function WordGamePage() {
     await setDoc(ref, { ...existing, [myKey]: { guesses: newGuesses, done: isDone } })
   }
 
-  function getColor(guess: string, pos: number) {
-    const ch = guess[pos]
-    if (ch === WORD[pos]) return '#3E8A38'
-    if (WORD.includes(ch)) return '#F68233'
-    return '#888'
+  function getColors(guess: string): string[] {
+    const colors = Array(5).fill('#888')
+    const remaining: Record<string, number> = {}
+    for (const ch of WORD) remaining[ch] = (remaining[ch] ?? 0) + 1
+    // First pass: greens consume letters
+    for (let i = 0; i < 5; i++) {
+      if (guess[i] === WORD[i]) { colors[i] = '#3E8A38'; remaining[guess[i]]-- }
+    }
+    // Second pass: oranges only if letter still has remaining count
+    for (let i = 0; i < 5; i++) {
+      if (colors[i] !== '#3E8A38' && remaining[guess[i]] > 0) {
+        colors[i] = '#F68233'
+        remaining[guess[i]]--
+      }
+    }
+    return colors
   }
 
   function handleKey(k: string) {
@@ -87,11 +98,15 @@ export default function WordGamePage() {
   const keyRows = [['Q','W','E','R','T','Y','U','I','O','P'],['A','S','D','F','G','H','J','K','L'],['ENTER','Z','X','C','V','B','N','M','DEL']]
 
   const usedKeys: Record<string, string> = {}
-  guesses.forEach(g => [...g].forEach((ch, i) => {
-    if (ch === WORD[i]) usedKeys[ch] = 'correct'
-    else if (WORD.includes(ch) && usedKeys[ch] !== 'correct') usedKeys[ch] = 'present'
-    else if (!usedKeys[ch]) usedKeys[ch] = 'absent'
-  }))
+  guesses.forEach(g => {
+    const colors = getColors(g)
+    ;[...g].forEach((ch, i) => {
+      const state = colors[i] === '#3E8A38' ? 'correct' : colors[i] === '#F68233' ? 'present' : 'absent'
+      if (state === 'correct') usedKeys[ch] = 'correct'
+      else if (state === 'present' && usedKeys[ch] !== 'correct') usedKeys[ch] = 'present'
+      else if (state === 'absent' && !usedKeys[ch]) usedKeys[ch] = 'absent'
+    })
+  })
 
   const keyColor = (k: string) => {
     if (usedKeys[k] === 'correct') return { bg: '#3E8A38', fg: '#fff' }
@@ -106,12 +121,13 @@ export default function WordGamePage() {
         {Array.from({ length: 6 }).map((_, ri) => {
           const guess = gs[ri]
           const isActive = isMe && ri === gs.length && !done
+          const colors = guess ? getColors(guess) : []
           return (
             <div key={ri} style={{display:'flex',gap:'3px',justifyContent:'center'}}>
               {Array.from({ length: 5 }).map((__, ci) => {
                 const ch = isActive ? (cur[ci] || '') : (guess?.[ci] || '')
                 const revealed = !!guess
-                const bg = revealed ? getColor(guess, ci) : (isActive && ch ? '#D0CCC4' : 'transparent')
+                const bg = revealed ? colors[ci] : (isActive && ch ? '#D0CCC4' : 'transparent')
                 const border = revealed ? 'transparent' : '#D0CCC4'
                 return (
                   <div key={ci} style={{width:'38px',height:'38px',borderRadius:'6px',border:`2px solid ${border}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'16px',fontWeight:'700',color:revealed?'#fff':'#18181A',backgroundColor:bg,flexShrink:0}}>
