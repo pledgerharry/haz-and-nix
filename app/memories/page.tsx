@@ -151,6 +151,20 @@ export default function MemoriesPage() {
 
   const currentItem = openAlbum?.items[albumIndex]
   const currentIsVideo = currentItem ? isVideoMedia(currentItem) : false
+  const swipeStartX = useRef<number | null>(null)
+
+  function onTouchStart(e: React.TouchEvent) {
+    swipeStartX.current = e.touches[0].clientX
+  }
+
+  function onTouchEnd(e: React.TouchEvent) {
+    if (swipeStartX.current === null || !openAlbum) return
+    const dx = e.changedTouches[0].clientX - swipeStartX.current
+    swipeStartX.current = null
+    if (Math.abs(dx) < 40) return
+    if (dx < 0 && albumIndex < openAlbum.items.length - 1) setAlbumIndex(i => i + 1)
+    if (dx > 0 && albumIndex > 0) setAlbumIndex(i => i - 1)
+  }
 
   return (
     <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'calc(80px + env(safe-area-inset-bottom, 0px))',paddingTop:'calc(env(safe-area-inset-top, 0px) + 56px)'}}>
@@ -176,7 +190,7 @@ export default function MemoriesPage() {
           </div>
 
           {/* Media area with prev/next */}
-          <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',position:'relative',overflow:'hidden',padding:'0 52px'}}>
+          <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',position:'relative',overflow:'hidden',padding:'0 52px'}}>
             {currentIsVideo
               ? <video key={currentItem.id} src={currentItem.url} controls playsInline style={{maxWidth:'100%',maxHeight:'100%',borderRadius:'10px'}} />
               : <img key={currentItem.id} src={currentItem.url} alt="" style={{maxWidth:'100%',maxHeight:'100%',objectFit:'contain',borderRadius:'6px'}} />}
