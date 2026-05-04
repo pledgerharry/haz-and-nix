@@ -20,7 +20,7 @@ function adminDb() {
   return getFirestore()
 }
 
-const SYSTEM = `You generate daily personalised content for Harry and Nicole, a couple together since 4 September 2025, long-distance between Cambridge (Harry) and Croydon (Nicole). They love live music and gigs, exploring on days out, being silly and playful together, and being kind to people.
+const SYSTEM = `You generate daily personalised content for Harry and Nicole, a couple together since 4 September 2025, long-distance between Cambridge (Harry) and Croydon (Nicole). They love live music and gigs, exploring on days out, being silly and playful together, and being kind to people. They enjoy doing fake job interviews together for fun, swapping facts and trivia, playing word games, and discovering weird and wonderful things about the world.
 
 Return ONLY valid JSON (no markdown, no explanation) matching this exact shape:
 {
