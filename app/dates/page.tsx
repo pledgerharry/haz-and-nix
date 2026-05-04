@@ -107,6 +107,17 @@ const POOL: Sugg[] = [
   { title: 'Porto & wine', location: 'Porto, Portugal', desc: 'Budget flights from Stansted, Douro riverfront, port wine lodges, and the most beautiful azulejo tiles anywhere.', tags: ['europe', 'culture', 'food', 'romantic'] },
   { title: 'Glastonbury Tor & Cheddar Gorge', location: 'Somerset', desc: 'Climb Glastonbury Tor at sunrise, then explore the dramatic Cheddar Gorge. Otherworldly and underrated.', tags: ['uk_day', 'outdoors', 'adventure', 'culture'] },
   { title: 'Portsmouth Historic Dockyard', location: 'Portsmouth', desc: 'HMS Victory, the Mary Rose, Spinnaker Tower views — a brilliant day out by the sea.', tags: ['uk_day', 'culture', 'outdoors'] },
+  // Experiences — urban & spontaneous
+  { title: 'Get a flash tattoo together', location: 'London', desc: 'Walk into a studio in Shoreditch or Soho, pick a flash design off the wall, and get inked. Spontaneous and something you\'ll have forever.', tags: ['experience', 'adventure', 'fun', 'london'] },
+  { title: 'Live comedy night', location: 'London', desc: 'Up The Creek in Greenwich, the Comedy Store, or Soho Theatre. Live stand-up is one of the best date nights going — book ahead.', tags: ['experience', 'culture', 'fun', 'london'] },
+  { title: 'Ceramics painting class', location: 'London / Cambridge', desc: 'Pick a pot, mug, or plate, and paint it together. Relaxed, creative, and you get to take it home.', tags: ['experience', 'fun', 'relaxed', 'romantic'] },
+  { title: 'Karaoke night', location: 'London / Cambridge', desc: 'Book a private room — Lucky Voice, Lucky Karaoke, or MAST. No audience, no shame, maximum fun.', tags: ['experience', 'fun', 'romantic'] },
+  { title: 'West End show', location: 'London', desc: 'Get last-minute tickets from the TKTS booth in Leicester Square on the day. Pick something you wouldn\'t normally choose.', tags: ['experience', 'culture', 'romantic', 'london'] },
+  { title: 'Night at the greyhounds', location: 'Catford Stadium, SE London', desc: '20 mins from Croydon — pick a dog, place a £2 bet, eat a pie, cheer loudly. Retro and absolutely brilliant.', tags: ['experience', 'fun', 'south_london', 'food'] },
+  { title: 'Sunrise hike', location: 'Surrey Hills / Chilterns', desc: 'Set an alarm, drive to a hill — Box Hill or the Chiltern ridgeway — and watch the sun come up together with a flask of tea.', tags: ['experience', 'outdoors', 'romantic', 'adventure'] },
+  { title: 'Vinyl record shopping', location: 'Portobello / Soho, London', desc: 'Spend an afternoon hunting through record crates at Rough Trade, Sounds of the Universe, or Portobello Market. Pick one to listen to together that evening.', tags: ['experience', 'culture', 'fun', 'london'] },
+  { title: 'Open-air cinema', location: 'London', desc: 'Luna Cinema, Rooftop Film Club, or Screen on the Green — outdoor films in summer. Take a blanket and snacks.', tags: ['experience', 'culture', 'romantic', 'london'] },
+  { title: 'Life drawing class', location: 'London / Cambridge', desc: 'Surprisingly fun, slightly absurd, and a proper talking point. Many venues run drop-in evenings with wine included.', tags: ['experience', 'culture', 'fun'] },
 ]
 
 type Decisions = { dismissed: string[]; likedTags: string[]; dislikedTags: string[] }
@@ -138,10 +149,13 @@ export default function DatesPage() {
 
   const existingTitles = useMemo(() => new Set(dates.map(d => d.title)), [dates])
 
+  // Shuffle once on mount so the initial 5 aren't always Cambridge-first
+  const shuffledPool = useMemo(() => [...POOL].sort(() => Math.random() - 0.5), [])
+
   const suggestions = useMemo(() => {
     const { dismissed, likedTags, dislikedTags } = decisions
     const dismissedSet = new Set(dismissed)
-    return POOL
+    return shuffledPool
       .filter(s => !dismissedSet.has(s.title) && !existingTitles.has(s.title))
       .map(s => {
         const score = s.tags.reduce((acc, tag) => {
@@ -153,7 +167,7 @@ export default function DatesPage() {
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, 5)
-  }, [decisions, existingTitles])
+  }, [decisions, existingTitles, shuffledPool])
 
   async function saveDecisions(update: Partial<Decisions>) {
     const next = { ...decisions, ...update }
@@ -166,7 +180,10 @@ export default function DatesPage() {
       title: s.title, location: s.location, desc: s.desc,
       addedBy: 'Suggested', status: 'pending', createdAt: serverTimestamp(),
     })
-    await saveDecisions({ likedTags: [...new Set([...decisions.likedTags, ...s.tags])] })
+    await saveDecisions({
+      dismissed: [...decisions.dismissed, s.title],
+      likedTags: [...new Set([...decisions.likedTags, ...s.tags])],
+    })
   }
 
   async function dismissSuggestion(s: Sugg) {
@@ -181,7 +198,10 @@ export default function DatesPage() {
       title: s.title, location: s.location, desc: s.desc,
       addedBy: 'Suggested', status: 'done', createdAt: serverTimestamp(),
     })
-    await saveDecisions({ likedTags: [...new Set([...decisions.likedTags, ...s.tags])] })
+    await saveDecisions({
+      dismissed: [...decisions.dismissed, s.title],
+      likedTags: [...new Set([...decisions.likedTags, ...s.tags])],
+    })
   }
 
   function startAdd() { setTitle(''); setLocation(''); setDesc(''); setEditingId(null); setAdding(true) }
