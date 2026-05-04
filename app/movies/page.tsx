@@ -94,7 +94,7 @@ export default function MoviesPage() {
     <div style={{ minHeight: '100vh', backgroundColor: '#F7F5F1', fontFamily: 'system-ui,sans-serif', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 56px)' }}>
       <PageHeader title="Movie wishlist" right={<button onClick={() => setAdding(a => !a)} style={{width:'32px',height:'32px',borderRadius:'10px',backgroundColor:'#263322',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#F68233',fontSize:'22px',fontWeight:'300',lineHeight:'1'}}>+</button>} />
 
-      <div style={{padding:'0 16px'}}>
+      <div style={{padding:'12px 16px 0'}}>
         {adding && (
           <div style={{backgroundColor:'#fff',borderRadius:'16px',padding:'14px 16px',border:'1px solid rgba(0,0,0,0.07)',marginBottom:'14px'}}>
             <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Movie title..." autoFocus style={{width:'100%',backgroundColor:'#F7F5F1',border:'1.5px solid #E4E1DB',borderRadius:'11px',padding:'10px 12px',fontSize:'13px',color:'#18181A',outline:'none',marginBottom:'8px',boxSizing:'border-box',fontFamily:'system-ui'}} />

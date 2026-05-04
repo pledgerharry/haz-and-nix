@@ -15,6 +15,7 @@ export default function MorePage() {
   const us = [
     { href: '/stats', icon: '📊', title: 'Relationship stats', sub: 'Days together and more' },
     { href: '/bucket', icon: '✅', title: 'Bucket list', sub: 'Things to do together' },
+    { href: '/countries', icon: '🌍', title: 'Countries', sub: 'Places we want to visit' },
     { href: '/memories', icon: '🖼️', title: 'Memories', sub: 'Photos and videos' },
     { href: '/dreams', icon: '🌙', title: 'Dream log', sub: 'Shared dreams' },
     { href: '/reminders', icon: '🔔', title: 'Reminders', sub: 'Shared reminders' },
@@ -42,7 +43,7 @@ export default function MorePage() {
   return (
     <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'calc(80px + env(safe-area-inset-bottom, 0px))',paddingTop:'calc(env(safe-area-inset-top, 0px) + 56px)'}}>
       <PageHeader title="More" showBack={false} />
-      <div style={{padding:'0 16px'}}>
+      <div style={{padding:'12px 16px 0'}}>
         <SectionLabel label="🎮 Games & fun" />
         {games.map(g => <Row key={g.href} {...g} />)}
         <SectionLabel label="💑 Us" />

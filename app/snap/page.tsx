@@ -87,7 +87,7 @@ export default function SnapPage() {
     <div style={{ minHeight: '100vh', backgroundColor: '#F7F5F1', fontFamily: 'system-ui,sans-serif', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 56px)' }}>
       <PageHeader title="Daily snap" right={!mySnap ? <button onClick={() => setShowForm(true)} style={{backgroundColor:'#263322',color:'#F68233',border:'none',borderRadius:'12px',padding:'8px 14px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>Post snap 📸</button> : undefined} />
 
-      <div style={{padding:'0 16px'}}>
+      <div style={{padding:'12px 16px 0'}}>
         <input ref={fileInput} type="file" accept="image/*,video/*" onChange={pickFile} style={{display:'none'}} />
         {showForm && !mySnap && (
           <div style={{backgroundColor:'#fff',borderRadius:'16px',padding:'14px 16px',border:'1px solid rgba(0,0,0,0.07)',marginBottom:'14px'}}>

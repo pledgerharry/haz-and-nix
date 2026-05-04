@@ -106,7 +106,7 @@ export default function RemindersPage() {
     <div style={{ minHeight: '100vh', backgroundColor: '#F7F5F1', fontFamily: 'system-ui,sans-serif', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 56px)' }}>
       <PageHeader title="Reminders" right={<button onClick={startAdd} style={{fontSize:'12px',color:'#F68233',fontWeight:'600',background:'none',border:'none',cursor:'pointer'}}>+ Add</button>} />
 
-      <div style={{ padding: '0 16px' }}>
+      <div style={{ padding: '12px 16px 0' }}>
         {adding && (
           <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '16px', border: '1px solid rgba(0,0,0,0.07)', marginBottom: '12px' }}>
             <div style={{ fontSize: '13px', fontWeight: '600', color: '#18181A', marginBottom: '14px' }}>{editingId ? 'Edit reminder' : 'New reminder'}</div>

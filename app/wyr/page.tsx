@@ -81,7 +81,7 @@ export default function WyrPage() {
     <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'calc(80px + env(safe-area-inset-bottom, 0px))',paddingTop:'calc(env(safe-area-inset-top, 0px) + 56px)'}}>
       <PageHeader title="Would you rather" />
 
-      <div style={{padding:'0 16px'}}>
+      <div style={{padding:'12px 16px 0'}}>
         <div style={{backgroundColor:'#1E2B1C',borderRadius:'20px',padding:'20px',marginBottom:'14px'}}>
           <div style={{fontSize:'10px',fontWeight:'600',letterSpacing:'0.1em',textTransform:'uppercase',color:'#6A9B63',marginBottom:'10px'}}>
             {new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}

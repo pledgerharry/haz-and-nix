@@ -73,7 +73,7 @@ export default function InterviewPage() {
     <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'calc(80px + env(safe-area-inset-bottom, 0px))',paddingTop:'calc(env(safe-area-inset-top, 0px) + 56px)'}}>
       <PageHeader title="Interview mode" />
 
-      <div style={{padding:'0 16px'}}>
+      <div style={{padding:'12px 16px 0'}}>
         <div style={{backgroundColor:'#1E2B1C',borderRadius:'20px',padding:'20px',marginBottom:'12px'}}>
           <div style={{fontSize:'10px',fontWeight:'600',letterSpacing:'0.1em',textTransform:'uppercase',color:'#6A9B63',marginBottom:'8px'}}>Today's role</div>
           <div style={{fontFamily:'Georgia,serif',fontSize:'22px',color:'#F68233',marginBottom:'4px'}}>{interview.role}</div>

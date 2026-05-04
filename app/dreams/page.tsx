@@ -122,7 +122,7 @@ export default function DreamsPage() {
     <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'calc(80px + env(safe-area-inset-bottom, 0px))',paddingTop:'calc(env(safe-area-inset-top, 0px) + 56px)'}}>
       <PageHeader title="Dream log" />
 
-      <div style={{ padding: '0 16px 16px' }}>
+      <div style={{ padding: '12px 16px 16px' }}>
         <div style={{ backgroundColor: '#1E2B1C', borderRadius: '16px', padding: '14px 16px', marginBottom: '16px' }}>
           <div style={{ fontSize: '11px', color: '#6A9B63', marginBottom: '8px' }}>Log a dream</div>
           <textarea

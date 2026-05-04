@@ -15,13 +15,33 @@ const inp: React.CSSProperties = {
 }
 
 const SUGGESTIONS = [
-  'Mini golf 🏌️','Picnic in the park 🧺','Cooking class 👨‍🍳','Wine tasting 🍷',
-  'Cinema & dinner 🎬','Day trip to the coast 🌊','Escape room 🔐','Pottery class 🏺',
-  'Botanical gardens 🌿','Comedy night 😂','Stargazing picnic 🌟','Museum day 🏛️',
-  'Spa day 🧖','Farmers market 🥕','Board game café 🎲','Ice skating ⛸️',
-  'Kayaking 🚣','Street food market 🌮','Drive-in movie 🚗','Art gallery + cocktails 🎨',
-  'Bowling 🎳','Sunrise hike 🌄','Afternoon tea ☕','Go-karting 🏎️',
-  'Axe throwing 🪓','Gin distillery tour 🫙','Live jazz night 🎷','Pottery painting 🎨',
+  // Cambridge & nearby
+  'Punting on the Cam 🚣','Cambridge Botanic Garden 🌸','Grantchester meadows walk 🌾',
+  'Cambridge Food Park 🌮','Ely Cathedral & riverside 🏰','Audley End House 🏡',
+  // London day out
+  'Borough Market + South Bank 🧀','Kew Gardens 🌿','Hampton Court Palace 👑',
+  'Richmond Park deer walk 🦌','Greenwich & Cutty Sark ⚓','Sky Garden 🌆',
+  'Tate Modern + river walk 🎨','Columbia Road flower market 🌷','Maltby Street Market 🥐',
+  'Thames river cruise 🛳️','Rooftop bar night 🍹','BFI IMAX 🎬',
+  // Croydon & south London
+  'Crystal Palace Park 🦕','Box Park Croydon 🌮','Brockwell Lido ☀️',
+  // UK day trips
+  'Brighton beach & pier 🎡','Oxford punting & pubs 🎓','Bath & Roman Baths 🛁',
+  'Cotswolds village wander 🏡','Stonehenge & Salisbury 🗿','New Forest ride 🐴',
+  'Whitstable oysters & beach 🦪','Rye old town wander 🏚️','Seven Sisters clifftop walk 🌊',
+  // UK weekends
+  'Edinburgh long weekend 🏰','Lake District hiking 🏔️','Peak District drive 🚗',
+  'Cornwall beach weekend 🏖️','Yorkshire Dales 🌿','Cardiff & Brecon Beacons 🏴󠁧󠁢󠁷󠁬󠁳󠁿',
+  // Europe
+  'Paris Eurostar 🗼','Amsterdam weekend 🌷','Dublin weekend 🍀',
+  'Lisbon & pastéis de nata ☀️','Barcelona & tapas 🥘','Rome & gelato 🍕',
+  'Prague & beer 🍺','Copenhagen hygge 🧜','Seville in spring 🌹',
+  // Experiences
+  'Cooking class 👨‍🍳','Cocktail making 🍸','Pottery class 🏺','Gin distillery tour 🫙',
+  'Wine tasting 🍷','Escape room 🔐','Axe throwing 🪓','Go-karting 🏎️',
+  'Comedy club 😂','Live jazz night 🎷','Karaoke night 🎤','Pub quiz 🧠',
+  'Spa day 🧖','Afternoon tea ☕','Picnic & stargazing 🌟','Board game café 🎲',
+  'Ice skating ⛸️','Mini golf 🏌️','Bowling 🎳','Wild swimming 🏊',
 ]
 
 export default function DatesPage() {
@@ -83,7 +103,7 @@ export default function DatesPage() {
         <button onClick={startAdd} style={{width:'32px',height:'32px',borderRadius:'10px',backgroundColor:'#263322',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#F68233',fontSize:'22px',fontWeight:'300',lineHeight:'1'}}>+</button>
       } />
 
-      <div style={{display:'flex',gap:'6px',padding:'0 16px 12px',overflowX:'auto'}}>
+      <div style={{display:'flex',gap:'6px',padding:'12px 16px 12px',overflowX:'auto'}}>
         {(['pending','approved','done'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} style={{borderRadius:'100px',padding:'6px 14px',fontSize:'12px',fontWeight:'500',whiteSpace:'nowrap',cursor:'pointer',border:'none',backgroundColor:tab===t?'#F68233':'#E4E1DB',color:tab===t?'#263322':'#6B6B6E'}}>
             {t.charAt(0).toUpperCase()+t.slice(1)} ({dates.filter(d=>d.status===t).length})

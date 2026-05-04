@@ -146,7 +146,7 @@ export default function WordGamePage() {
     <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'calc(80px + env(safe-area-inset-bottom, 0px))',paddingTop:'calc(env(safe-area-inset-top, 0px) + 56px)'}}>
       <PageHeader title="Word game" />
 
-      <div style={{padding:'0 12px'}}>
+      <div style={{padding:'12px 12px 0'}}>
         <div style={{backgroundColor:'#fff',borderRadius:'16px',padding:'12px 20px',border:'1px solid rgba(0,0,0,0.07)',display:'flex',justifyContent:'center',gap:'28px',marginBottom:'10px'}}>
           <div style={{textAlign:'center'}}>
             <div style={{fontSize:'10px',color:'#ADADB3',fontWeight:'600',textTransform:'uppercase',letterSpacing:'0.05em'}}>Harry</div>

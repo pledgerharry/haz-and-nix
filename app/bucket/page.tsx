@@ -73,7 +73,7 @@ export default function BucketPage() {
         <button onClick={startAdd} style={{fontSize:'12px',color:'#F68233',fontWeight:'600',background:'none',border:'none',cursor:'pointer'}}>+ Add</button>
       } />
 
-      <div style={{padding:'0 16px'}}>
+      <div style={{padding:'12px 16px 0'}}>
         {adding && (
           <div style={{backgroundColor:'#fff',borderRadius:'16px',padding:'14px 16px',border:'1px solid rgba(0,0,0,0.07)',marginBottom:'12px'}}>
             <div style={{fontSize:'13px',fontWeight:'600',color:'#18181A',marginBottom:'10px'}}>{editingId ? 'Edit item' : 'New item'}</div>
