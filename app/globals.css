@@ -9,3 +9,7 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+
