@@ -19,6 +19,7 @@ export default function MemoriesPage() {
   const [file, setFile] = useState<File | null>(null)
   const [adding, setAdding] = useState(false)
   const [lightbox, setLightbox] = useState<any | null>(null)
+  const [lightboxIsVideo, setLightboxIsVideo] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
 
   const isHarry = user?.email === HARRY_EMAIL
@@ -78,15 +79,15 @@ export default function MemoriesPage() {
     <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'80px'}}>
       {lightbox && (
         <div onClick={() => setLightbox(null)} style={{position:'fixed',inset:0,backgroundColor:'rgba(0,0,0,0.92)',zIndex:200,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'20px'}}>
-          {isVideo(lightbox)
+          {lightboxIsVideo
             ? <video src={lightbox.url} controls playsInline style={{maxWidth:'100%',maxHeight:'72vh',borderRadius:'12px'}} />
-            : <img src={lightbox.url} alt="" style={{maxWidth:'100%',maxHeight:'72vh',borderRadius:'12px',objectFit:'contain'}} />}
+            : <img src={lightbox.url} alt="" onError={() => setLightboxIsVideo(true)} style={{maxWidth:'100%',maxHeight:'72vh',borderRadius:'12px',objectFit:'contain'}} />}
           {lightbox.caption && <div style={{color:'#F0EDE6',fontSize:'14px',marginTop:'14px',textAlign:'center',fontStyle:'italic'}}>"{lightbox.caption}"</div>}
           <div style={{color:'#6A9B63',fontSize:'11px',marginTop:'8px'}}>{lightbox.fromName} · {lightbox.createdAt?.toDate?.()?.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
         </div>
       )}
 
-      <div style={{padding:'52px 20px 0',display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'16px'}}>
+      <div style={{padding:'16px 20px 0',display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'16px'}}>
         <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
           <button onClick={() => router.back()} style={{width:'32px',height:'32px',borderRadius:'10px',backgroundColor:'#E4E1DB',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -133,7 +134,7 @@ export default function MemoriesPage() {
 
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px'}}>
           {memories.map(m => (
-            <div key={m.id} onClick={() => setLightbox(m)} style={{borderRadius:'12px',overflow:'hidden',cursor:'pointer',aspectRatio:'1',position:'relative',backgroundColor:'#E4E1DB'}}>
+            <div key={m.id} onClick={() => { setLightbox(m); setLightboxIsVideo(isVideo(m)) }} style={{borderRadius:'12px',overflow:'hidden',cursor:'pointer',aspectRatio:'1',position:'relative',backgroundColor:'#E4E1DB'}}>
               {isVideo(m)
                 ? <video src={m.url} muted playsInline preload="metadata" style={{width:'100%',height:'100%',objectFit:'cover'}} />
                 : <img src={m.url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />}

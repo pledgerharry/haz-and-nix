@@ -26,10 +26,15 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: 'Haz & Nix',
   description: 'Just for us',
+  manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     title: 'Haz & Nix',
     statusBarStyle: 'black-translucent',
+  },
+  icons: {
+    icon: '/favicon-32.png',
+    apple: '/apple-touch-icon.png',
   },
 }
 

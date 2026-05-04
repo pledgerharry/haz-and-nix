@@ -121,7 +121,7 @@ export default function DreamsPage() {
     <div style={{ minHeight: '100vh', backgroundColor: '#F7F5F1', fontFamily: 'system-ui,sans-serif', paddingBottom: '80px' }}>
       <style>{`@keyframes wavePulse{0%,100%{transform:scaleY(0.4)}50%{transform:scaleY(1)}}`}</style>
 
-      <div style={{ padding: '52px 20px 0', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+      <div style={{ padding: '16px 20px 0', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
         <button onClick={() => router.back()} style={{ width: '32px', height: '32px', borderRadius: '10px', backgroundColor: '#E4E1DB', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </button>

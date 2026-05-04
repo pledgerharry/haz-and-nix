@@ -40,7 +40,7 @@ export default function MorePage() {
 
   return (
     <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'80px'}}>
-      <div style={{padding:'52px 20px 16px'}}>
+      <div style={{padding:'16px 20px 16px'}}>
         <h1 style={{fontFamily:'Georgia,serif',fontSize:'21px',color:'#18181A'}}>More</h1>
       </div>
       <div style={{padding:'0 16px'}}>

@@ -204,7 +204,7 @@ export default function HomePage() {
     <div style={{ minHeight: '100vh', backgroundColor: '#F7F5F1', fontFamily: 'system-ui,sans-serif' }}>
 
       {/* Header */}
-      <div style={{ padding: '52px 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ padding: '16px 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
           <img src="/logo.svg" alt="" style={{ width: '34px', height: '34px', borderRadius: '9px', display: 'block' }} />
           <span style={{ fontFamily: 'Georgia,serif', fontSize: '21px', color: '#18181A', letterSpacing: '-0.3px', lineHeight: '1' }}>Haz <em style={{ color: '#F68233', fontStyle: 'italic' }}>&amp;</em> Nix</span>
