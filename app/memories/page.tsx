@@ -45,7 +45,11 @@ export default function MemoriesPage() {
   const [adding, setAdding] = useState(false)
   const [openAlbum, setOpenAlbum] = useState<Album | null>(null)
   const [albumIndex, setAlbumIndex] = useState(0)
+  const [addToFiles, setAddToFiles] = useState<File[]>([])
+  const [addToUploading, setAddToUploading] = useState(false)
+  const [addToProgress, setAddToProgress] = useState<{ current: number; total: number } | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
+  const addToFileInput = useRef<HTMLInputElement>(null)
 
   const isHarry = user?.email === HARRY_EMAIL
 
@@ -75,6 +79,16 @@ export default function MemoriesPage() {
       (b.latestCreatedAt?.seconds ?? 0) - (a.latestCreatedAt?.seconds ?? 0)
     )
   }, [memories])
+
+  // Keep openAlbum in sync when Firestore adds/removes items
+  useEffect(() => {
+    if (!openAlbum) return
+    const updated = albums.find(a => a.id === openAlbum.id)
+    if (updated) {
+      setOpenAlbum(updated)
+      setAlbumIndex(prev => Math.min(prev, updated.items.length - 1))
+    }
+  }, [albums])
 
   function pickFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const picked = Array.from(e.target.files ?? [])
@@ -147,6 +161,44 @@ export default function MemoriesPage() {
   function closeAlbum() {
     setOpenAlbum(null)
     setAlbumIndex(0)
+    setAddToFiles([])
+  }
+
+  function pickAddToFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const picked = Array.from(e.target.files ?? [])
+    if (!picked.length) return
+    setAddToFiles(prev => [...prev, ...picked])
+    if (addToFileInput.current) addToFileInput.current.value = ''
+  }
+
+  async function uploadToAlbum() {
+    if (!addToFiles.length || !user || !openAlbum) return
+    setAddToUploading(true)
+    const startOrder = openAlbum.items.length
+    setAddToProgress({ current: 0, total: addToFiles.length })
+    try {
+      for (let i = 0; i < addToFiles.length; i++) {
+        const f = addToFiles[i]
+        setAddToProgress({ current: i + 1, total: addToFiles.length })
+        const sRef = storageRef(storage, `memories/${Date.now()}_${user.uid}_${i}`)
+        await uploadBytes(sRef, f)
+        const url = await getDownloadURL(sRef)
+        await addDoc(collection(db, 'memories'), {
+          url,
+          albumId: openAlbum.id,
+          albumName: openAlbum.name,
+          albumOrder: startOrder + i,
+          from: user.email,
+          fromName: isHarry ? 'Harry' : 'Nicole',
+          mediaType: f.type,
+          createdAt: serverTimestamp(),
+        })
+      }
+      setAddToFiles([])
+    } finally {
+      setAddToUploading(false)
+      setAddToProgress(null)
+    }
   }
 
   const currentItem = openAlbum?.items[albumIndex]
@@ -203,15 +255,33 @@ export default function MemoriesPage() {
             )}
           </div>
 
-          {/* Dot indicators + bottom padding */}
-          <div style={{padding:'14px 20px',paddingBottom:'calc(20px + env(safe-area-inset-bottom,0px))',flexShrink:0,display:'flex',justifyContent:'center',gap:'6px',flexWrap:'wrap'}}>
-            {openAlbum.items.length > 1 && openAlbum.items.map((_, i) => (
-              <div
-                key={i}
-                onClick={() => setAlbumIndex(i)}
-                style={{width:'6px',height:'6px',borderRadius:'50%',backgroundColor:i===albumIndex?'#F68233':'rgba(255,255,255,0.25)',cursor:'pointer',flexShrink:0}}
-              />
-            ))}
+          {/* Dot indicators + add-more footer */}
+          <div style={{padding:'10px 20px',paddingBottom:'calc(16px + env(safe-area-inset-bottom,0px))',flexShrink:0}}>
+            {/* Dots */}
+            {openAlbum.items.length > 1 && (
+              <div style={{display:'flex',justifyContent:'center',gap:'6px',flexWrap:'wrap',marginBottom:'12px'}}>
+                {openAlbum.items.map((_, i) => (
+                  <div key={i} onClick={() => setAlbumIndex(i)} style={{width:'6px',height:'6px',borderRadius:'50%',backgroundColor:i===albumIndex?'#F68233':'rgba(255,255,255,0.25)',cursor:'pointer',flexShrink:0}} />
+                ))}
+              </div>
+            )}
+            {/* Add-more input */}
+            <input ref={addToFileInput} type="file" accept="image/*,video/*" multiple onChange={pickAddToFiles} style={{display:'none'}} />
+            {addToFiles.length > 0 ? (
+              <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
+                <div style={{flex:1,fontSize:'12px',color:'rgba(255,255,255,0.6)'}}>
+                  {addToFiles.length} file{addToFiles.length > 1 ? 's' : ''} selected
+                </div>
+                <button onClick={() => setAddToFiles([])} style={{background:'none',border:'none',color:'rgba(255,255,255,0.4)',fontSize:'18px',cursor:'pointer',padding:'0',lineHeight:'1'}}>×</button>
+                <button onClick={uploadToAlbum} disabled={addToUploading} style={{backgroundColor:'#F68233',color:'#263322',border:'none',borderRadius:'10px',padding:'8px 14px',fontSize:'12px',fontWeight:'700',cursor:'pointer',opacity:addToUploading?0.6:1,whiteSpace:'nowrap'}}>
+                  {addToProgress ? `${addToProgress.current}/${addToProgress.total}` : `Add ${addToFiles.length}`}
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => addToFileInput.current?.click()} style={{width:'100%',backgroundColor:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.55)',border:'1.5px dashed rgba(255,255,255,0.18)',borderRadius:'10px',padding:'9px',fontSize:'12px',fontWeight:'500',cursor:'pointer'}}>
+                + Add photos or videos
+              </button>
+            )}
           </div>
         </div>
       )}
