@@ -7,6 +7,19 @@ import Nav from '../components/Nav'
 import PageHeader from '../components/PageHeader'
 
 const HARRY_EMAIL = 'harrypledger@hotmail.com'
+const TODAY = new Date().toISOString().split('T')[0]
+
+type DailySugg = { title: string; description: string; location: string; budget: string; type: string }
+
+// Map AI-returned type to adaptive pool tags so learning still works
+const TYPE_TAGS: Record<string, string[]> = {
+  'Food & drink': ['food', 'experience'],
+  'Outdoor':      ['outdoors', 'adventure'],
+  'Cultural':     ['culture', 'experience'],
+  'Cosy':         ['relaxed', 'romantic'],
+  'Day trip':     ['uk_day', 'outdoors'],
+  'Remote':       ['experience', 'relaxed'],
+}
 
 const inp: React.CSSProperties = {
   width: '100%', backgroundColor: '#F7F5F1', border: '1.5px solid #E4E1DB',
@@ -147,9 +160,24 @@ export default function DatesPage() {
     })
   }, [])
 
+  const [dailySugg, setDailySugg] = useState<DailySugg | null>(null)
+  useEffect(() => {
+    return onSnapshot(doc(db, 'dateSuggestions', TODAY), snap => {
+      if (snap.exists()) setDailySugg(snap.data() as DailySugg)
+    })
+  }, [])
+
   const existingTitles = useMemo(() => new Set(dates.map(d => d.title)), [dates])
 
-  // Shuffle once on mount so the initial 5 aren't always Cambridge-first
+  // Daily AI suggestion — shown first if it hasn't been acted on
+  const visibleDaily = useMemo(() => {
+    if (!dailySugg) return null
+    if (new Set(decisions.dismissed).has(dailySugg.title)) return null
+    if (existingTitles.has(dailySugg.title)) return null
+    return dailySugg
+  }, [dailySugg, decisions.dismissed, existingTitles])
+
+  // Shuffle once on mount so the initial pool isn't always Cambridge-first
   const shuffledPool = useMemo(() => [...POOL].sort(() => Math.random() - 0.5), [])
 
   const suggestions = useMemo(() => {
@@ -166,8 +194,8 @@ export default function DatesPage() {
         return { ...s, score }
       })
       .sort((a, b) => b.score - a.score)
-      .slice(0, 5)
-  }, [decisions, existingTitles, shuffledPool])
+      .slice(0, visibleDaily ? 4 : 5)
+  }, [decisions, existingTitles, shuffledPool, visibleDaily])
 
   async function saveDecisions(update: Partial<Decisions>) {
     const next = { ...decisions, ...update }
@@ -202,6 +230,11 @@ export default function DatesPage() {
       dismissed: [...decisions.dismissed, s.title],
       likedTags: [...new Set([...decisions.likedTags, ...s.tags])],
     })
+  }
+
+  // Convert a daily AI suggestion into a Sugg-shaped object so we can reuse the same action functions
+  function dailyToSugg(d: DailySugg): Sugg {
+    return { title: d.title, location: d.location, desc: d.description, tags: TYPE_TAGS[d.type] ?? ['experience'] }
   }
 
   function startAdd() { setTitle(''); setLocation(''); setDesc(''); setEditingId(null); setAdding(true) }
@@ -259,11 +292,34 @@ export default function DatesPage() {
         )}
 
         {/* Suggestion cards — only shown in pending tab */}
-        {tab === 'pending' && suggestions.length > 0 && (
+        {tab === 'pending' && (visibleDaily || suggestions.length > 0) && (
           <div style={{ marginBottom: '4px' }}>
             <div style={{ fontSize: '11px', fontWeight: '600', color: '#ADADB3', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>✨ Suggested for you</div>
+
+            {/* Daily AI-generated suggestion — first card */}
+            {visibleDaily && (
+              <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '14px 16px', border: '1px solid rgba(246,130,51,0.3)', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: '600', color: '#18181A', flex: 1 }}>{visibleDaily.title}</div>
+                  <div style={{ fontSize: '9px', fontWeight: '700', backgroundColor: '#F68233', color: '#263322', borderRadius: '100px', padding: '2px 7px', whiteSpace: 'nowrap' }}>TODAY</div>
+                </div>
+                <div style={{ fontSize: '11px', color: '#F68233', marginBottom: '4px' }}>📍 {visibleDaily.location}</div>
+                <div style={{ display: 'flex', gap: '5px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: '500', backgroundColor: '#F7F5F1', color: '#6B6B6E', borderRadius: '100px', padding: '2px 8px' }}>{visibleDaily.type}</span>
+                  <span style={{ fontSize: '10px', fontWeight: '500', backgroundColor: '#F7F5F1', color: '#6B6B6E', borderRadius: '100px', padding: '2px 8px' }}>{visibleDaily.budget}</span>
+                </div>
+                <div style={{ fontSize: '12px', color: '#6B6B6E', lineHeight: '1.55', marginBottom: '12px' }}>{visibleDaily.description}</div>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={() => dismissSuggestion(dailyToSugg(visibleDaily))} style={{ flex: 1, padding: '9px 6px', borderRadius: '11px', fontSize: '11px', fontWeight: '500', border: '1.5px solid #E4E1DB', cursor: 'pointer', backgroundColor: 'transparent', color: '#ADADB3' }}>Not for us</button>
+                  <button onClick={() => doneSuggestion(dailyToSugg(visibleDaily))} style={{ flex: 1, padding: '9px 6px', borderRadius: '11px', fontSize: '11px', fontWeight: '500', border: '1.5px solid #E4E1DB', cursor: 'pointer', backgroundColor: 'transparent', color: '#6B6B6E' }}>Done this ✓</button>
+                  <button onClick={() => approveSuggestion(dailyToSugg(visibleDaily))} style={{ flex: 1, padding: '9px 6px', borderRadius: '11px', fontSize: '11px', fontWeight: '600', border: 'none', cursor: 'pointer', backgroundColor: 'rgba(59,109,17,0.12)', color: '#3B6D11' }}>Add to list ＋</button>
+                </div>
+              </div>
+            )}
+
+            {/* Static adaptive pool cards */}
             {suggestions.map(s => (
-              <div key={s.title} style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '14px 16px', border: '1px solid rgba(246,130,51,0.2)', marginBottom: '10px', position: 'relative' }}>
+              <div key={s.title} style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '14px 16px', border: '1px solid rgba(246,130,51,0.2)', marginBottom: '10px' }}>
                 <div style={{ fontSize: '14px', fontWeight: '600', color: '#18181A', marginBottom: '2px' }}>{s.title}</div>
                 <div style={{ fontSize: '11px', color: '#F68233', marginBottom: '6px' }}>📍 {s.location}</div>
                 <div style={{ fontSize: '12px', color: '#6B6B6E', lineHeight: '1.55', marginBottom: '12px' }}>{s.desc}</div>
