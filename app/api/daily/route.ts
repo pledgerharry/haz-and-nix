@@ -97,6 +97,17 @@ export async function GET(request: NextRequest) {
     return new Response('Unauthorized', { status: 401 })
   }
 
+  try {
+    return await handleDaily()
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    const stack = err instanceof Error ? err.stack : undefined
+    console.error('[daily] unhandled error:', message, stack)
+    return Response.json({ error: message, stack }, { status: 500 })
+  }
+}
+
+async function handleDaily() {
   const now = new Date()
   const date = now.toISOString().split('T')[0]
   const season = getSeason(now.getMonth() + 1)

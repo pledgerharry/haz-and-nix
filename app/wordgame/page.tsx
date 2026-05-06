@@ -1,22 +1,20 @@
 'use client'
 import { useAuth } from '../context'
 import { db } from '../firebase'
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore'
+import { doc, getDoc, setDoc, onSnapshot, updateDoc, increment } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
 import Nav from '../components/Nav'
 import PageHeader from '../components/PageHeader'
-import { WORDLIST } from './wordlist'
+import { ANSWERS, VALID_GUESSES } from './wordlist'
 
 const HARRY_EMAIL = 'harrypledger@hotmail.com'
 
-const WORDS = ['BRAVE','CRANE','FLAME','GRANT','PORCH','TWIST','PLACE','STONE','FLUTE','DRINK','SPORT','LIGHT','PLANT','BRUSH','CLOUD','CHESS','QUILT','RIVER','SWEEP','TORCH','ABOUT','ABOVE','ABUSE','ACTOR','ADMIT','ADOPT','ADULT','AFTER','AGAIN','AGENT','AGREE','AHEAD','ALARM','ALBUM','ALIKE','ALIVE','ALLOW','ALONE','ALONG','ALTER','ANGEL','ANGER','ANGLE','ANGRY','ANKLE','APART','APPLE','APPLY','ARGUE','ARISE','ARRAY','ARROW','ASIDE','AVOID','AWAKE','AWARD','AWARE','AWFUL','BEACH','BEARD','BEAST','BEGIN','BEING','BELOW','BENCH','BLACK','BLADE','BLAME','BLANK','BLAST','BLAZE','BLEED','BLEND','BLESS','BLIND','BLOCK','BLOOD','BLOOM','BLOWN','BOARD','BONUS','BOOST','BOUND','BRAIN','BRAND','BREAD','BREAK','BREED','BRICK','BRIDE','BRIEF','BRING','BROAD','BROKE','BROWN','BUILD','BUILT','BUNCH','BURST','CANDY','CARRY','CAUSE','CHAIR','CHAOS','CHARM','CHART','CHASE','CHEAP','CHECK','CHEER','CHEST','CHIEF','CHILD','CIVIC','CIVIL','CLAIM','CLASS','CLEAN','CLEAR','CLICK','CLIFF','CLIMB','CLOCK','COACH','COAST','CORAL','COULD','COUNT','COURT','COVER','CRACK','CRAFT','CRASH','CRAZY','CREAM','CREEK','CRIME','CRISP','CROSS','CROWD','CROWN','CRUEL','CRUSH','CURVE','CYCLE','DAILY','DAIRY','DANCE','DEATH','DEBUT','DECAY','DELAY','DENSE','DEPTH','DEVIL','DISCO','DIRTY','DODGE','DOUBT','DRAFT','DRAIN','DRAMA','DREAD','DREAM','DRESS','DRIFT','DRIVE','DRONE','DROWN','DWARF','EAGER','EARLY','EARTH','EIGHT','ELITE','EMPTY','ENEMY','ENJOY','ENTER','ENTRY','EQUAL','ERROR','ESSAY','EVERY','EXACT','EXIST','EXTRA','FAIRY','FAITH','FANCY','FAULT','FEAST','FENCE','FEVER','FIELD','FIFTH','FIFTY','FIGHT','FINAL','FIRST','FIXED','FLASH','FLESH','FLOAT','FLOOD','FLOOR','FLOUR','FOCUS','FORCE','FORGE','FRAME','FRANK','FRESH','FRONT','FROST','FRUIT','FUNNY','GHOST','GIANT','GIVEN','GLASS','GLOOM','GLOVE','GOING','GRACE','GRADE','GRAIN','GRAND','GRAPH','GRASS','GREAT','GREET','GRIEF','GRIME','GRIND','GROSS','GROUP','GROVE','GROWN','GUARD','GUEST','GUIDE','GUILT','HABIT','HAPPY','HARSH','HEART','HEAVY','HENCE','HONEY','HORSE','HOTEL','HOUSE','HUMAN','HUMOR','IDEAL','IMAGE','INDEX','INNER','INPUT','ISSUE','IVORY','JEWEL','JUICE','KNIFE','KNOCK','LARGE','LASER','LATER','LAUGH','LAYER','LEARN','LEGAL','LEVEL','LIMIT','LINEN','LIVER','LOCAL','LODGE','LOGIC','LOOSE','LOVER','LOWER','LUCKY','LUNAR','MAGIC','MAJOR','MAKER','MANOR','MARCH','MARSH','MATCH','MAYOR','MEDIA','MERCY','MERIT','METAL','MIGHT','MONEY','MONTH','MORAL','MOTOR','MOUNT','MOUSE','MOUTH','MOVIE','MUSIC','NAIVE','NERVE','NEVER','NIGHT','NOBLE','NOISE','NORTH','NOTED','NOVEL','NURSE','OCEAN','OFFER','OFTEN','OLIVE','OPERA','ORBIT','ORDER','OTHER','OUTER','OWNER','OXIDE','OZONE','PAINT','PANIC','PAPER','PARTY','PASTA','PATCH','PAUSE','PEACE','PEARL','PENNY','PHONE','PHOTO','PIANO','PILOT','PITCH','PIXEL','PLAIN','PLATE','PLAZA','PLUCK','POINT','POLAR','POWER','PRESS','PRICE','PRIDE','PRIME','PRINT','PRIOR','PRIZE','PROBE','PROOF','PROSE','PROUD','PULSE','PUNCH','PUPIL','QUEEN','QUERY','QUEST','QUICK','QUIET','QUOTA','QUOTE','RADAR','RAISE','RALLY','RANGE','RAPID','RATIO','REACH','REACT','READY','REALM','REBEL','REFER','REIGN','RELAX','RENEW','REPAY','REPLY','RIDER','RIDGE','RIGHT','RISEN','RISKY','RIVAL','ROCKY','ROUGH','ROUND','ROUTE','ROYAL','RULER','RURAL','SADLY','SAINT','SALAD','SAUCE','SCALE','SCENE','SCOPE','SCORE','SCOUT','SEIZE','SENSE','SEVEN','SHADE','SHAFT','SHAKE','SHALL','SHAME','SHAPE','SHARE','SHARP','SHELF','SHELL','SHIFT','SHINY','SHOCK','SHOOT','SHORE','SHORT','SHOUT','SIGHT','SILLY','SINCE','SIXTH','SIXTY','SKILL','SLICE','SLIDE','SLOPE','SMALL','SMART','SMELL','SMILE','SMOKE','SOLID','SOLVE','SORRY','SOUTH','SPACE','SPARE','SPARK','SPEAK','SPEED','SPEND','SPINE','SPITE','SPLIT','SPRAY','SQUAD','STACK','STAGE','STAIN','STAIR','STAKE','STALE','STAND','STARE','START','STATE','STEAK','STEAM','STEEP','STEER','STERN','STICK','STILL','STOCK','STOOD','STORM','STORY','STOVE','STRAW','STUCK','STYLE','SUGAR','SUITE','SUNNY','SUPER','SURGE','SWEAR','SWEAT','SWEEP','SWEET','SWIFT','SWING','TABLE','TAKEN','TASTE','TEACH','TEETH','TEMPO','TENSE','TENTH','TERMS','THEFT','THEIR','THEME','THERE','THESE','THICK','THINK','THORN','THREE','THREW','THROW','THUMB','TIGER','TIGHT','TIRED','TITLE','TODAY','TOKEN','TOOTH','TOPIC','TOTAL','TOUCH','TOUGH','TOWER','TOXIC','TRACK','TRADE','TRAIL','TRAIN','TRAIT','TRASH','TREAT','TREND','TRIAL','TRIBE','TRICK','TRIED','TROOP','TRUCK','TRULY','TRUNK','TRUST','TRUTH','TUTOR','TWICE','ULTRA','UNDER','UNION','UNITE','UNTIL','UPPER','URBAN','USAGE','USUAL','UTTER','VALID','VALUE','VALVE','VAULT','VIDEO','VIRAL','VISIT','VISTA','VITAL','VIVID','VOCAL','VOICE','VOTER','WASTE','WATCH','WATER','WEARY','WEAVE','WEIGH','WEIRD','WHALE','WHEEL','WHERE','WHICH','WHILE','WHITE','WHOLE','WHOSE','WITCH','WOMAN','WOMEN','WORLD','WORRY','WORSE','WORST','WORTH','WOULD','WOUND','WRATH','WRITE','WRONG','YACHT','YIELD','YOUNG','YOURS','YOUTH','ZEBRA']
+const VALID = new Set([...ANSWERS, ...VALID_GUESSES])
 
-const VALID = new Set([...WORDS, ...WORDLIST])
-
-function getTodayWord() {
+function getTodayWord(): string {
   const today = new Date()
-  const seed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate()
-  return WORDS[seed % WORDS.length]
+  const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate()
+  return ANSWERS[seed % ANSWERS.length]
 }
 
 const TODAY = new Date().toISOString().split('T')[0]
@@ -36,35 +34,75 @@ export default function WordGamePage() {
   const [otherGuesses, setOtherGuesses] = useState<string[]>([])
   const [otherDone, setOtherDone] = useState(false)
   const [scores, setScores] = useState({ harry: 0, nicole: 0 })
+  const [shakeRow, setShakeRow] = useState(false)
+  const [alreadyScored, setAlreadyScored] = useState(false)
 
+  // Listen to today's game state
   useEffect(() => {
     const ref = doc(db, 'wordgame', TODAY)
     return onSnapshot(ref, snap => {
       if (snap.exists()) {
         const data = snap.data()
-        if (data[myKey]) { setGuesses(data[myKey].guesses || []); setDone(data[myKey].done || false) }
-        if (data[otherKey]) { setOtherGuesses(data[otherKey].guesses || []); setOtherDone(data[otherKey].done || false) }
-        if (data.scores) setScores(data.scores)
+        if (data[myKey]) {
+          setGuesses(data[myKey].guesses || [])
+          setDone(data[myKey].done || false)
+          setAlreadyScored(data[myKey].scored || false)
+          if (data[myKey].done) {
+            const gs: string[] = data[myKey].guesses || []
+            const won = gs.length > 0 && gs[gs.length - 1] === WORD
+            if (won) setStatus('🎉 Got it!')
+            else setStatus('The word was ' + WORD)
+          }
+        }
+        if (data[otherKey]) {
+          setOtherGuesses(data[otherKey].guesses || [])
+          setOtherDone(data[otherKey].done || false)
+        }
       }
     })
   }, [user])
 
-  async function saveState(newGuesses: string[], isDone: boolean) {
+  // Listen to persistent scores
+  useEffect(() => {
+    const ref = doc(db, 'wordgame', 'scores')
+    return onSnapshot(ref, snap => {
+      if (snap.exists()) {
+        const data = snap.data()
+        setScores({ harry: data.harry || 0, nicole: data.nicole || 0 })
+      }
+    })
+  }, [])
+
+  async function saveState(newGuesses: string[], isDone: boolean, won: boolean) {
     const ref = doc(db, 'wordgame', TODAY)
     const snap = await getDoc(ref)
     const existing = snap.exists() ? snap.data() : {}
-    await setDoc(ref, { ...existing, [myKey]: { guesses: newGuesses, done: isDone } })
+    const prevScored = existing[myKey]?.scored || false
+
+    await setDoc(ref, {
+      ...existing,
+      [myKey]: { guesses: newGuesses, done: isDone, scored: prevScored || (won && !alreadyScored) },
+    })
+
+    if (won && !prevScored && !alreadyScored) {
+      const scoresRef = doc(db, 'wordgame', 'scores')
+      const scoresSnap = await getDoc(scoresRef)
+      if (scoresSnap.exists()) {
+        await updateDoc(scoresRef, { [myKey]: increment(1) })
+      } else {
+        await setDoc(scoresRef, { harry: myKey === 'harry' ? 1 : 0, nicole: myKey === 'nicole' ? 1 : 0 })
+      }
+      setAlreadyScored(true)
+    }
   }
 
   function getColors(guess: string): string[] {
     const colors = Array(5).fill('#888')
     const remaining: Record<string, number> = {}
     for (const ch of WORD) remaining[ch] = (remaining[ch] ?? 0) + 1
-    // First pass: greens consume letters
     for (let i = 0; i < 5; i++) {
       if (guess[i] === WORD[i]) { colors[i] = '#3E8A38'; remaining[guess[i]]-- }
     }
-    // Second pass: oranges only if letter still has remaining count
     for (let i = 0; i < 5; i++) {
       if (colors[i] !== '#3E8A38' && remaining[guess[i]] > 0) {
         colors[i] = '#F68233'
@@ -74,12 +112,17 @@ export default function WordGamePage() {
     return colors
   }
 
+  function triggerShake() {
+    setShakeRow(true)
+    setTimeout(() => setShakeRow(false), 600)
+  }
+
   function handleKey(k: string) {
     if (done) return
     if (k === 'DEL') { setCurrent(c => c.slice(0, -1)); return }
     if (k === 'ENTER') {
-      if (current.length !== 5) { setStatus('Need 5 letters'); return }
-      if (!VALID.has(current)) { setStatus('Not a valid word — try again'); return }
+      if (current.length !== 5) { setStatus('Need 5 letters'); triggerShake(); return }
+      if (!VALID.has(current)) { setStatus('Not a valid word'); triggerShake(); return }
       const newGuesses = [...guesses, current]
       const won = current === WORD
       const isDone = won || newGuesses.length === 6
@@ -89,7 +132,7 @@ export default function WordGamePage() {
       else if (isDone) setStatus('The word was ' + WORD)
       else setStatus('Guess ' + (newGuesses.length + 1) + ' of 6')
       setDone(isDone)
-      saveState(newGuesses, isDone)
+      saveState(newGuesses, isDone, won)
       return
     }
     if (current.length < 5 && /^[A-Z]$/.test(k)) setCurrent(c => c + k)
@@ -121,9 +164,14 @@ export default function WordGamePage() {
         {Array.from({ length: 6 }).map((_, ri) => {
           const guess = gs[ri]
           const isActive = isMe && ri === gs.length && !done
+          const isShaking = isMe && isActive && shakeRow
           const colors = guess ? getColors(guess) : []
           return (
-            <div key={ri} style={{display:'flex',gap:'3px',justifyContent:'center'}}>
+            <div
+              key={ri}
+              className={isShaking ? 'shake-row' : ''}
+              style={{display:'flex',gap:'3px',justifyContent:'center'}}
+            >
               {Array.from({ length: 5 }).map((__, ci) => {
                 const ch = isActive ? (cur[ci] || '') : (guess?.[ci] || '')
                 const revealed = !!guess
@@ -144,6 +192,16 @@ export default function WordGamePage() {
 
   return (
     <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'calc(80px + env(safe-area-inset-bottom, 0px))',paddingTop:'calc(env(safe-area-inset-top, 0px) + 56px)'}}>
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          15% { transform: translateX(-5px); }
+          35% { transform: translateX(5px); }
+          55% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
+        }
+        .shake-row { animation: shake 0.5s ease-in-out; }
+      `}</style>
       <PageHeader title="Word game" />
 
       <div style={{padding:'12px 12px 0'}}>
