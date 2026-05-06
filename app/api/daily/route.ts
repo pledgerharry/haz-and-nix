@@ -7,13 +7,31 @@ export const dynamic = 'force-dynamic'
 
 const anthropic = new Anthropic()
 
+function parsePrivateKey(raw: string | undefined): string | undefined {
+  if (!raw) return undefined
+  // Strip surrounding quotes added by some paste tools
+  let key = raw.replace(/^["']|["']$/g, '').trim()
+  // Convert literal \n sequences → real newlines (handles Vercel's storage format)
+  key = key.replace(/\\n/g, '\n')
+  // If the key is still all on one line (no newlines at all), it's likely base64 only —
+  // wrap it with PEM headers so Firebase Admin can parse it
+  if (!key.includes('\n')) {
+    key = `-----BEGIN RSA PRIVATE KEY-----\n${key}\n-----END RSA PRIVATE KEY-----\n`
+  }
+  return key
+}
+
 function adminDb() {
   if (!getApps().length) {
+    const privateKey = parsePrivateKey(process.env.FIREBASE_PRIVATE_KEY)
+    if (!privateKey) throw new Error('FIREBASE_PRIVATE_KEY env var is not set')
+    if (!process.env.FIREBASE_PROJECT_ID) throw new Error('FIREBASE_PROJECT_ID env var is not set')
+    if (!process.env.FIREBASE_CLIENT_EMAIL) throw new Error('FIREBASE_CLIENT_EMAIL env var is not set')
     initializeApp({
       credential: cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        privateKey,
       }),
     })
   }
