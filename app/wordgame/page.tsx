@@ -8,7 +8,6 @@ import PageHeader from '../components/PageHeader'
 import { ANSWERS, VALID_GUESSES } from './wordlist'
 
 const HARRY_EMAIL = 'harrypledger@hotmail.com'
-
 const VALID = new Set([...ANSWERS, ...VALID_GUESSES])
 
 function getTodayWord(): string {
@@ -35,34 +34,31 @@ export default function WordGamePage() {
   const [otherDone, setOtherDone] = useState(false)
   const [scores, setScores] = useState({ harry: 0, nicole: 0 })
   const [shakeRow, setShakeRow] = useState(false)
-  const [alreadyScored, setAlreadyScored] = useState(false)
+  const [bothDone, setBothDone] = useState(false)
 
-  // Listen to today's game state
   useEffect(() => {
     const ref = doc(db, 'wordgame', TODAY)
     return onSnapshot(ref, snap => {
-      if (snap.exists()) {
-        const data = snap.data()
-        if (data[myKey]) {
-          setGuesses(data[myKey].guesses || [])
-          setDone(data[myKey].done || false)
-          setAlreadyScored(data[myKey].scored || false)
-          if (data[myKey].done) {
-            const gs: string[] = data[myKey].guesses || []
-            const won = gs.length > 0 && gs[gs.length - 1] === WORD
-            if (won) setStatus('🎉 Got it!')
-            else setStatus('The word was ' + WORD)
-          }
-        }
-        if (data[otherKey]) {
-          setOtherGuesses(data[otherKey].guesses || [])
-          setOtherDone(data[otherKey].done || false)
+      if (!snap.exists()) return
+      const data = snap.data()
+      if (data[myKey]) {
+        setGuesses(data[myKey].guesses || [])
+        setDone(data[myKey].done || false)
+        if (data[myKey].done) {
+          const gs: string[] = data[myKey].guesses || []
+          const won = data[myKey].won === true
+          if (won) setStatus('🎉 Got it!')
+          else setStatus('The word was ' + WORD)
         }
       }
+      if (data[otherKey]) {
+        setOtherGuesses(data[otherKey].guesses || [])
+        setOtherDone(data[otherKey].done || false)
+      }
+      if (data[myKey]?.done && data[otherKey]?.done) setBothDone(true)
     })
   }, [user])
 
-  // Listen to persistent scores
   useEffect(() => {
     const ref = doc(db, 'wordgame', 'scores')
     return onSnapshot(ref, snap => {
@@ -77,22 +73,36 @@ export default function WordGamePage() {
     const ref = doc(db, 'wordgame', TODAY)
     const snap = await getDoc(ref)
     const existing = snap.exists() ? snap.data() : {}
-    const prevScored = existing[myKey]?.scored || false
 
     await setDoc(ref, {
       ...existing,
-      [myKey]: { guesses: newGuesses, done: isDone, scored: prevScored || (won && !alreadyScored) },
+      [myKey]: { guesses: newGuesses, done: isDone, won },
     })
 
-    if (won && !prevScored && !alreadyScored) {
-      const scoresRef = doc(db, 'wordgame', 'scores')
-      const scoresSnap = await getDoc(scoresRef)
-      if (scoresSnap.exists()) {
-        await updateDoc(scoresRef, { [myKey]: increment(1) })
-      } else {
-        await setDoc(scoresRef, { harry: myKey === 'harry' ? 1 : 0, nicole: myKey === 'nicole' ? 1 : 0 })
+    // Only score when both players are done and the day hasn't been scored yet
+    if (isDone && !existing.scored) {
+      const other = existing[otherKey]
+      if (other?.done === true) {
+        const myCount = won ? newGuesses.length : 7
+        const otherWon = other.won === true
+        const otherCount = otherWon ? (other.guesses?.length ?? 7) : 7
+
+        let winner: string | null = null
+        if (myCount < otherCount) winner = myKey
+        else if (otherCount < myCount) winner = otherKey
+
+        await updateDoc(ref, { scored: true })
+
+        if (winner) {
+          const scoresRef = doc(db, 'wordgame', 'scores')
+          const scoresSnap = await getDoc(scoresRef)
+          if (scoresSnap.exists()) {
+            await updateDoc(scoresRef, { [winner]: increment(1) })
+          } else {
+            await setDoc(scoresRef, { harry: winner === 'harry' ? 1 : 0, nicole: winner === 'nicole' ? 1 : 0 })
+          }
+        }
       }
-      setAlreadyScored(true)
     }
   }
 
@@ -158,9 +168,12 @@ export default function WordGamePage() {
     return { bg: '#E4E1DB', fg: '#18181A' }
   }
 
-  function renderBoard(gs: string[], cur: string, isMe: boolean) {
+  function renderBoard(gs: string[], cur: string, isMe: boolean, compact = false) {
+    const cellSize = compact ? '32px' : '38px'
+    const gap = compact ? '2px' : '3px'
+    const fontSize = compact ? '14px' : '16px'
     return (
-      <div style={{display:'flex',flexDirection:'column',gap:'3px'}}>
+      <div style={{display:'flex',flexDirection:'column',gap}}>
         {Array.from({ length: 6 }).map((_, ri) => {
           const guess = gs[ri]
           const isActive = isMe && ri === gs.length && !done
@@ -170,7 +183,7 @@ export default function WordGamePage() {
             <div
               key={ri}
               className={isShaking ? 'shake-row' : ''}
-              style={{display:'flex',gap:'3px',justifyContent:'center'}}
+              style={{display:'flex',gap,justifyContent:'center'}}
             >
               {Array.from({ length: 5 }).map((__, ci) => {
                 const ch = isActive ? (cur[ci] || '') : (guess?.[ci] || '')
@@ -178,7 +191,7 @@ export default function WordGamePage() {
                 const bg = revealed ? colors[ci] : (isActive && ch ? '#D0CCC4' : 'transparent')
                 const border = revealed ? 'transparent' : '#D0CCC4'
                 return (
-                  <div key={ci} style={{width:'38px',height:'38px',borderRadius:'6px',border:`2px solid ${border}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'16px',fontWeight:'700',color:revealed?'#fff':'#18181A',backgroundColor:bg,flexShrink:0}}>
+                  <div key={ci} style={{width:cellSize,height:cellSize,borderRadius:'6px',border:`2px solid ${border}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize,fontWeight:'700',color:revealed?'#fff':'#18181A',backgroundColor:bg,flexShrink:0}}>
                     {ch}
                   </div>
                 )
@@ -189,6 +202,8 @@ export default function WordGamePage() {
       </div>
     )
   }
+
+  const myName = isHarry ? 'Harry' : 'Nicole'
 
   return (
     <div style={{minHeight:'100vh',backgroundColor:'#F7F5F1',fontFamily:'system-ui,sans-serif',paddingBottom:'calc(80px + env(safe-area-inset-bottom, 0px))',paddingTop:'calc(env(safe-area-inset-top, 0px) + 56px)'}}>
@@ -205,6 +220,7 @@ export default function WordGamePage() {
       <PageHeader title="Word game" />
 
       <div style={{padding:'12px 12px 0'}}>
+        {/* All-time scores */}
         <div style={{backgroundColor:'#fff',borderRadius:'16px',padding:'12px 20px',border:'1px solid rgba(0,0,0,0.07)',display:'flex',justifyContent:'center',gap:'28px',marginBottom:'10px'}}>
           <div style={{textAlign:'center'}}>
             <div style={{fontSize:'10px',color:'#ADADB3',fontWeight:'600',textTransform:'uppercase',letterSpacing:'0.05em'}}>Harry</div>
@@ -219,32 +235,58 @@ export default function WordGamePage() {
 
         <div style={{textAlign:'center',fontSize:'12px',fontWeight:'500',color:'#6B6B6E',marginBottom:'8px',minHeight:'20px'}}>{status}</div>
 
-        <div style={{marginBottom:'10px'}}>
-          <div style={{fontSize:'10px',fontWeight:'600',color:'#ADADB3',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:'5px',textAlign:'center'}}>Your board</div>
-          {renderBoard(guesses, current, true)}
-        </div>
-
-        {done && (
+        {/* Side-by-side boards when both done, otherwise just mine */}
+        {bothDone ? (
           <div style={{marginBottom:'10px'}}>
-            <div style={{fontSize:'10px',fontWeight:'600',color:'#ADADB3',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:'5px',textAlign:'center'}}>{otherName}'s board{!otherDone ? ' (in progress)' : ''}</div>
-            {renderBoard(otherGuesses, '', false)}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px'}}>
+              <div>
+                <div style={{fontSize:'10px',fontWeight:'600',color:'#ADADB3',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:'5px',textAlign:'center'}}>{myName}</div>
+                {renderBoard(guesses, '', false, true)}
+              </div>
+              <div>
+                <div style={{fontSize:'10px',fontWeight:'600',color:'#ADADB3',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:'5px',textAlign:'center'}}>{otherName}</div>
+                {renderBoard(otherGuesses, '', false, true)}
+              </div>
+            </div>
+            <div style={{textAlign:'center',fontSize:'11px',color:'#ADADB3',marginTop:'8px'}}>
+              {(() => {
+                const myWon = guesses.length > 0 && guesses[guesses.length - 1] === WORD
+                const otherWon = otherGuesses.length > 0 && otherGuesses[otherGuesses.length - 1] === WORD
+                const myCount = myWon ? guesses.length : 7
+                const otherCount = otherWon ? otherGuesses.length : 7
+                if (myCount < otherCount) return `${myName} wins this round 🏆`
+                if (otherCount < myCount) return `${otherName} wins this round 🏆`
+                if (!myWon && !otherWon) return 'Neither got it today 😬'
+                return 'A draw! 🤝'
+              })()}
+            </div>
+          </div>
+        ) : (
+          <div style={{marginBottom:'10px'}}>
+            <div style={{fontSize:'10px',fontWeight:'600',color:'#ADADB3',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:'5px',textAlign:'center'}}>Your board</div>
+            {renderBoard(guesses, current, true)}
+            {done && !bothDone && (
+              <div style={{textAlign:'center',fontSize:'11px',color:'#ADADB3',marginTop:'8px'}}>Waiting for {otherName} to finish...</div>
+            )}
           </div>
         )}
 
-        <div style={{display:'flex',flexDirection:'column',gap:'5px',marginTop:'10px'}}>
-          {keyRows.map((row, ri) => (
-            <div key={ri} style={{display:'flex',justifyContent:'center',gap:'4px'}}>
-              {row.map(k => {
-                const { bg, fg } = keyColor(k)
-                return (
-                  <button key={k} onClick={() => handleKey(k)} style={{height:'40px',minWidth:k.length>1?'46px':'30px',flex:k.length>1?'0 0 auto':'1',maxWidth:k.length>1?'46px':'36px',padding:'0 2px',borderRadius:'7px',border:'none',backgroundColor:bg,color:fg,fontSize:k.length>1?'9px':'13px',fontWeight:'700',cursor:'pointer',fontFamily:'system-ui'}}>
-                    {k === 'DEL' ? '⌫' : k}
-                  </button>
-                )
-              })}
-            </div>
-          ))}
-        </div>
+        {!done && (
+          <div style={{display:'flex',flexDirection:'column',gap:'5px',marginTop:'10px'}}>
+            {keyRows.map((row, ri) => (
+              <div key={ri} style={{display:'flex',justifyContent:'center',gap:'4px'}}>
+                {row.map(k => {
+                  const { bg, fg } = keyColor(k)
+                  return (
+                    <button key={k} onClick={() => handleKey(k)} style={{height:'40px',minWidth:k.length>1?'46px':'30px',flex:k.length>1?'0 0 auto':'1',maxWidth:k.length>1?'46px':'36px',padding:'0 2px',borderRadius:'7px',border:'none',backgroundColor:bg,color:fg,fontSize:k.length>1?'9px':'13px',fontWeight:'700',cursor:'pointer',fontFamily:'system-ui'}}>
+                      {k === 'DEL' ? '⌫' : k}
+                    </button>
+                  )
+                })}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <Nav />
     </div>

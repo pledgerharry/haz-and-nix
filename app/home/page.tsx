@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../context'
 import { useRouter } from 'next/navigation'
 import { db } from '../firebase'
-import { doc, setDoc, onSnapshot, collection, query, orderBy, where } from 'firebase/firestore'
+import { doc, setDoc, onSnapshot, collection, query, orderBy, where, getDoc } from 'firebase/firestore'
 import { signOut } from 'firebase/auth'
 import { auth } from '../firebase'
 import Nav from '../components/Nav'
-import { repeatLabel, formatReminderDate } from '../reminders/page'
+import { repeatLabel, countDueToday } from '../reminders/page'
 
 const HARRY_EMAIL = 'harrypledger@hotmail.com'
 const TODAY = new Date().toISOString().split('T')[0]
@@ -25,6 +25,8 @@ export default function HomePage() {
   const [editLocation, setEditLocation] = useState('')
   const [savingNextUp, setSavingNextUp] = useState(false)
   const [reminders, setReminders] = useState<any[]>([])
+  const [goalsDone, setGoalsDone] = useState(0)
+  const [goalsTotal, setGoalsTotal] = useState(0)
 
   const [notifs, setNotifs] = useState({
     notes: 0,
@@ -39,7 +41,6 @@ export default function HomePage() {
     if (mounted && !loading && !user) router.push('/')
   }, [user, loading, router, mounted])
 
-  // Live listener for next up
   useEffect(() => {
     if (!user) return
     return onSnapshot(doc(db, 'shared', 'nextup'), snap => {
@@ -63,6 +64,25 @@ export default function HomePage() {
     if (!user) return
     const q = query(collection(db, 'reminders'), orderBy('createdAt', 'desc'))
     return onSnapshot(q, snap => setReminders(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+  }, [user])
+
+  // Goals listeners
+  useEffect(() => {
+    if (!user) return
+    const goalsQ = query(collection(db, 'goalItems'), orderBy('createdAt', 'asc'))
+    const unsub1 = onSnapshot(goalsQ, snap => {
+      setGoalsTotal(snap.docs.length)
+    })
+    const unsub2 = onSnapshot(doc(db, 'goalCompletions', TODAY), snap => {
+      if (snap.exists()) {
+        const data = snap.data() as Record<string, { harry?: boolean; nicole?: boolean }>
+        const done = Object.values(data).filter(v => v.harry && v.nicole).length
+        setGoalsDone(done)
+      } else {
+        setGoalsDone(0)
+      }
+    })
+    return () => { unsub1(); unsub2() }
   }, [user])
 
   useEffect(() => {
@@ -120,7 +140,8 @@ export default function HomePage() {
 
   const isHarry = user.email === HARRY_EMAIL
 
-  // Show upcoming non-done reminders (with a date today or future, or recurring)
+  const dueToday = countDueToday(reminders)
+
   const upcomingReminders = reminders.filter(r => {
     if (r.done) return false
     if (r.repeatType && r.repeatType !== 'none') return true
@@ -296,7 +317,14 @@ export default function HomePage() {
       {upcomingReminders.length > 0 && (
         <div style={{ margin: '0 16px 14px', backgroundColor: '#fff', borderRadius: '16px', padding: '12px 14px', border: '1px solid rgba(0,0,0,0.07)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <div style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#ADADB3' }}>Reminders</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#ADADB3' }}>Reminders</div>
+              {dueToday > 0 && (
+                <div style={{ fontSize: '9px', fontWeight: '700', padding: '2px 7px', borderRadius: '100px', backgroundColor: '#F68233', color: '#263322' }}>
+                  {dueToday} due today
+                </div>
+              )}
+            </div>
             <button onClick={() => router.push('/reminders')} style={{ fontSize: '10px', color: '#F68233', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer' }}>See all</button>
           </div>
           {upcomingReminders.map((r, i) => (
@@ -308,6 +336,22 @@ export default function HomePage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Goals widget */}
+      {goalsTotal > 0 && (
+        <div
+          onClick={() => router.push('/goals')}
+          style={{ margin: '0 16px 14px', backgroundColor: '#fff', borderRadius: '16px', padding: '12px 14px', border: '1px solid rgba(0,0,0,0.07)', cursor: 'pointer' }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <div style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#ADADB3' }}>Goals</div>
+            <div style={{ fontSize: '11px', fontWeight: '600', color: '#18181A' }}>{goalsDone}/{goalsTotal} done today</div>
+          </div>
+          <div style={{ height: '4px', backgroundColor: '#F0EDE6', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${goalsTotal > 0 ? (goalsDone / goalsTotal) * 100 : 0}%`, backgroundColor: '#F68233', borderRadius: '2px' }} />
+          </div>
         </div>
       )}
 

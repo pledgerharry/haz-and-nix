@@ -1,7 +1,7 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { db } from '../firebase'
-import { collection, addDoc, onSnapshot, orderBy, query, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, onSnapshot, orderBy, query, updateDoc, deleteDoc, doc, serverTimestamp, writeBatch } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
 import Nav from '../components/Nav'
 import PageHeader from '../components/PageHeader'
@@ -36,6 +36,36 @@ export function repeatLabel(rem: any) {
   return ''
 }
 
+function isRecurring(rem: any) {
+  return rem.repeatType && rem.repeatType !== 'none'
+}
+
+export function countDueToday(reminders: any[]): number {
+  const today = new Date().toISOString().split('T')[0]
+  return reminders.filter(r => {
+    if (isRecurring(r)) {
+      // Due if not yet done today — treat completion on a prior day as expired
+      if (!r.done) return true
+      if (r.completionDate && r.completionDate < today) return true
+      return false
+    }
+    return !r.done && r.date === today
+  }).length
+}
+
+async function resetExpiredRecurring(reminders: any[]) {
+  const today = new Date().toISOString().split('T')[0]
+  const toReset = reminders.filter(r =>
+    r.done &&
+    isRecurring(r) &&
+    r.completionDate &&
+    r.completionDate < today
+  )
+  for (const r of toReset) {
+    await updateDoc(doc(db, 'reminders', r.id), { done: false, completionDate: null })
+  }
+}
+
 export default function RemindersPage() {
   const router = useRouter()
   const [reminders, setReminders] = useState<any[]>([])
@@ -49,7 +79,12 @@ export default function RemindersPage() {
 
   useEffect(() => {
     const q = query(collection(db, 'reminders'), orderBy('createdAt', 'desc'))
-    return onSnapshot(q, snap => setReminders(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+    return onSnapshot(q, snap => {
+      const rems = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      setReminders(rems)
+      // Reset recurring reminders whose completion date is before today
+      resetExpiredRecurring(rems)
+    })
   }, [])
 
   function resetForm() {
@@ -91,7 +126,14 @@ export default function RemindersPage() {
   }
 
   async function toggleDone(id: string, current: boolean) {
-    await updateDoc(doc(db, 'reminders', id), { done: !current })
+    const today = new Date().toISOString().split('T')[0]
+    if (!current) {
+      // Marking as done — store completion date
+      await updateDoc(doc(db, 'reminders', id), { done: true, completionDate: today })
+    } else {
+      // Marking as not done — clear completion date
+      await updateDoc(doc(db, 'reminders', id), { done: false, completionDate: null })
+    }
   }
 
   async function deleteReminder(id: string) {
@@ -102,11 +144,20 @@ export default function RemindersPage() {
     setRepeatDays(d => d.includes(day) ? d.filter(x => x !== day) : [...d, day])
   }
 
+  const today = new Date().toISOString().split('T')[0]
+  const dueToday = countDueToday(reminders)
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#F7F5F1', fontFamily: 'system-ui,sans-serif', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 56px)' }}>
       <PageHeader title="Reminders" right={<button onClick={startAdd} style={{fontSize:'12px',color:'#F68233',fontWeight:'600',background:'none',border:'none',cursor:'pointer'}}>+ Add</button>} />
 
       <div style={{ padding: '12px 16px 0' }}>
+        {dueToday > 0 && (
+          <div style={{backgroundColor:'rgba(246,130,51,0.1)',borderRadius:'12px',padding:'9px 14px',marginBottom:'12px',fontSize:'12px',color:'#F68233',fontWeight:'600'}}>
+            {dueToday} reminder{dueToday !== 1 ? 's' : ''} due today
+          </div>
+        )}
+
         {adding && (
           <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '16px', border: '1px solid rgba(0,0,0,0.07)', marginBottom: '12px' }}>
             <div style={{ fontSize: '13px', fontWeight: '600', color: '#18181A', marginBottom: '14px' }}>{editingId ? 'Edit reminder' : 'New reminder'}</div>

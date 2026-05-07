@@ -1,10 +1,34 @@
 'use client'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '../context'
+import { db } from '../firebase'
+import { collection, query, orderBy, onSnapshot, doc } from 'firebase/firestore'
+import { useEffect, useState } from 'react'
 import Nav from '../components/Nav'
 import PageHeader from '../components/PageHeader'
 
+const TODAY = new Date().toISOString().split('T')[0]
+
 export default function MorePage() {
   const router = useRouter()
+  const { user } = useAuth()
+  const [goalsDone, setGoalsDone] = useState(0)
+  const [goalsTotal, setGoalsTotal] = useState(0)
+
+  useEffect(() => {
+    if (!user) return
+    const q = query(collection(db, 'goalItems'), orderBy('createdAt', 'asc'))
+    const unsub1 = onSnapshot(q, snap => setGoalsTotal(snap.docs.length))
+    const unsub2 = onSnapshot(doc(db, 'goalCompletions', TODAY), snap => {
+      if (snap.exists()) {
+        const data = snap.data() as Record<string, { harry?: boolean; nicole?: boolean }>
+        setGoalsDone(Object.values(data).filter(v => v.harry && v.nicole).length)
+      } else {
+        setGoalsDone(0)
+      }
+    })
+    return () => { unsub1(); unsub2() }
+  }, [user])
 
   const games = [
     { href: '/wordgame', icon: '🔤', title: 'Word game', sub: 'Daily head-to-head' },
@@ -12,7 +36,10 @@ export default function MorePage() {
     { href: '/interview', icon: '📋', title: 'Interview mode', sub: 'Silly job interviews' },
   ]
 
+  const goalsSub = goalsTotal > 0 ? `${goalsDone}/${goalsTotal} done today` : 'Track shared daily goals'
+
   const us = [
+    { href: '/goals', icon: '🎯', title: 'Daily goals', sub: goalsSub },
     { href: '/stats', icon: '📊', title: 'Relationship stats', sub: 'Days together and more' },
     { href: '/bucket', icon: '✅', title: 'Bucket list', sub: 'Things to do together' },
     { href: '/countries', icon: '🌍', title: 'Countries', sub: 'Places we want to visit' },
