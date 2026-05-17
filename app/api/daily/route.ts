@@ -9,12 +9,8 @@ const anthropic = new Anthropic()
 
 function parsePrivateKey(raw: string | undefined): string | undefined {
   if (!raw) return undefined
-  // Strip surrounding quotes added by some paste tools
   let key = raw.replace(/^["']|["']$/g, '').trim()
-  // Convert literal \n sequences → real newlines (handles Vercel's storage format)
   key = key.replace(/\\n/g, '\n')
-  // If the key is still all on one line (no newlines at all), it's likely base64 only —
-  // wrap it with PEM headers so Firebase Admin can parse it
   if (!key.includes('\n')) {
     key = `-----BEGIN RSA PRIVATE KEY-----\n${key}\n-----END RSA PRIVATE KEY-----\n`
   }
@@ -50,6 +46,23 @@ function getDaysTogether(date: Date): number {
   return Math.max(0, Math.round((date.getTime() - start.getTime()) / 86400000))
 }
 
+async function getRecentQuestions(db: FirebaseFirestore.Firestore, today: Date): Promise<string[]> {
+  const questions: string[] = []
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    const dateStr = d.toISOString().split('T')[0]
+    try {
+      const snap = await db.collection('daily').doc(dateStr).get()
+      if (snap.exists) {
+        const data = snap.data()
+        if (data?.question) questions.push(data.question)
+      }
+    } catch { /* skip */ }
+  }
+  return questions
+}
+
 async function getRecentSuggestionTitles(db: FirebaseFirestore.Firestore, today: Date): Promise<string[]> {
   const titles: string[] = []
   for (let i = 1; i <= 7; i++) {
@@ -67,47 +80,65 @@ async function getRecentSuggestionTitles(db: FirebaseFirestore.Firestore, today:
   return titles
 }
 
-const SYSTEM = `You generate daily personalised content for Harry and Nicole (Haz & Nix), a couple together since 4 September 2025, long-distance between Cambridge (Harry) and Croydon/South London (Nicole). They love live music and gigs, exploring on days out, being silly and playful together, and being kind to people. They enjoy doing fake job interviews together for fun, swapping facts and trivia, playing word games, and discovering weird and wonderful things about the world.
+const SYSTEM = `You generate daily personalised content for Harry and Nicole — a couple who call themselves Haz & Nix.
 
-For the dateSuggestion field, you are generating one specific, actionable date idea for them. Think like a friend who knows them well — not a travel blog.
+WHO THEY ARE:
+- Harry lives in Cambridge, Nicole lives in Croydon (South London). Long-distance couple.
+- Together since 4 September 2025.
+- Harry is bald with a red beard. Nicole is the self-appointed Chief Yapper.
+- They are playful and sarcastic with each other in an affectionate way — banter, not meanness.
+- They love music, days out, being silly, and being genuinely kind to people.
+- They enjoy fake job interviews as an inside joke.
+- They love fun facts and trivia.
+- They've been on days out to Ely, Norwich, and St Ives together.
+- They enjoy word games.
 
-THEIR INTERESTS: Music (gigs, record shopping, listening sessions), food and trying new cuisines, markets, vintage and thrifting, getting out in nature, art and making things (pottery, ceramics, painting), film and TV, spontaneous and unusual experiences.
+DAILY QUESTION:
+Generate one question per day. Mix between:
+- Silly and playful (about 60% of the time): "If I came with a warning label, what would it say?", "What's my most toxic trait when I'm hungry?", "If you could ban me from doing one thing, what would it be?", "What's something I think I'm good at but I'm actually terrible at?", "What would my villain origin story be?", "If you had to describe me using only a food, what would it be and why?", "If our relationship was a TV show, what genre would it be?", "What's something I'm better at than anyone you've ever met?", "If you had to give me a new name, what would it be?"
+- Deeper and meaningful (about 40% of the time): "What's a moment with me you keep coming back to?", "What's something small I do that you love but never told me?", "When did you first think this might actually be something?", "What's something you want us to do before the end of this year?", "What's a quality of mine you hope never changes?"
+Questions should mostly be about Harry and Nicole specifically — use "me/my" from the asker's perspective, tied to their specific dynamic. Occasionally more general. They should feel like something you'd actually ask each other on a long-distance call, not a generic couples app.
+Always include a fun fact loosely related to the question topic. Start the fact with an emoji.
 
-DATE TYPES THEY ENJOY: Food & drink, outdoor and active, cultural (museums, galleries, gigs, cinema), cosy and low-key (pubs, board games, staying in), day trips, spontaneous/unusual ideas.
+WOULD YOU RATHER:
+Generate one per day. Both options must feel genuinely hard to choose between — no obvious answer. Vary the themes: food, music, travel, relationships, superpowers, daily life, hypotheticals. Occasionally reference their situation naturally: long distance, Cambridge, Croydon, train journeys, days out. Keep it fun but with real tension in the choice.
+Examples of the right vibe: "Would you rather only ever listen to one album forever or never listen to the same song twice?", "Would you rather always arrive an hour early or always arrive ten minutes late?", "Would you rather the train to Cambridge never runs on time, or always runs on time but takes 4 hours?"
 
-LOCATIONS: Suggestions should be in Cambridge, Croydon/South London, or a day trip reachable from either. Occasionally somewhere further afield if genuinely worth it. Do NOT always default to Cambridge — vary across their two cities and London.
+INTERVIEW MODE:
+Generate one interview role per day. Mix between:
+- Ridiculous made-up roles: Chief Yapper, Director of Vibes, Head of Snack Logistics, Lemonade Taster, Professional Nap Consultant, Minister for Unsolicited Opinions, Head of Chaotic Energy, VP of Asking Questions Mid-Film
+- Real jobs made silly: Head Chef (but only for cereal), Senior Software Engineer (for a company that only makes one button), Professional Dog Walker (for one very specific dog)
 
-BUDGET: Vary the budget. Some ideas should be free or cheap, some mid-range (£30–£80), occasionally something special.
+The role must have:
+- A job title
+- A silly department name and employment terms (e.g. "Dept. of Unnecessary Commentary · Full time · No holidays")
+- Exactly 3 interview questions that are playful but with a hint of real interview energy. Examples: "Describe a time you successfully derailed a conversation within 30 seconds.", "Where do you see yourself in five years, specifically in terms of words per minute?", "Walk us through your process for deciding something is someone else's problem.", "How do you handle feedback that you are, in fact, the problem?", "What does good snack logistics look like to you, and how do you measure success?"
 
-SEASONAL AWARENESS: Lean into the current season — outdoor ideas in summer, cosy/indoor ideas in winter, mix in spring and autumn.
-
-TONE: Warm and thoughtful, but also fun and a bit playful. Be specific and practical. Never generic.
+DATE SUGGESTION:
+One specific, actionable date idea for Harry and Nicole. Think like a friend who knows them well, not a travel blog. Ideas should be somewhere in Cambridge, South London/Croydon, or a day trip reachable from either — do NOT always default to Cambridge. Vary the budget (some free/cheap, some mid-range £30–£80, occasionally splash out). Lean into the current season. Name actual specific places. Make the description warm and personal — reference why they'd specifically love it.
 
 Return ONLY valid JSON (no markdown, no explanation) matching this exact shape:
 {
-  "question": "A thoughtful, fun question of the day",
-  "questionFact": "A short fun fact related to the question, starting with an emoji",
+  "question": "string — the daily question",
+  "fact": "string — a fun fact related to the question topic, starting with an emoji",
   "wyr": {
-    "question": "Would you rather...",
-    "optionA": "First option with relevant emoji",
-    "optionB": "Second option with relevant emoji"
+    "question": "string — the would you rather question",
+    "optionA": "string — first option",
+    "optionB": "string — second option"
   },
   "interview": {
-    "role": "A silly job title",
-    "company": "A ridiculous company name",
-    "description": "A funny job description in 2 sentences",
-    "questions": ["q1", "q2", "q3", "q4", "q5"]
+    "role": "string — job title",
+    "department": "string — silly department name and employment terms",
+    "questions": ["string", "string", "string"]
   },
   "dateSuggestion": {
-    "title": "Short punchy name for the date idea",
-    "description": "2-3 sentences. What it is, why they'd love it, any specific detail that makes it feel personal to them.",
-    "location": "Specific place or city",
+    "title": "string — short punchy name for the date idea",
+    "description": "string — 2-3 sentences. What it is, why they'd love it, any specific detail that makes it feel personal to them.",
+    "location": "string — specific place or area",
     "budget": "Free | Under £15 | £30-£80 | Splash out",
     "type": "Food & drink | Outdoor | Cultural | Cosy | Day trip | Remote"
   }
-}
-
-Make everything warm, playful, and personalised. Vary the themes across days. Keep interview questions fun and in-character.`
+}`
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
@@ -132,17 +163,29 @@ async function handleDaily() {
   const daysTogether = getDaysTogether(now)
 
   const db = adminDb()
-  const recentTitles = await getRecentSuggestionTitles(db, now)
-  const recentStr = recentTitles.length > 0
+
+  const [recentQuestions, recentTitles] = await Promise.all([
+    getRecentQuestions(db, now),
+    getRecentSuggestionTitles(db, now),
+  ])
+
+  const recentQStr = recentQuestions.length > 0
+    ? recentQuestions.map((q, i) => `${i + 1}. "${q}"`).join('\n')
+    : 'none yet'
+
+  const recentTitleStr = recentTitles.length > 0
     ? recentTitles.map(t => `"${t}"`).join(', ')
     : 'none yet'
 
-  const userMessage = `Today's date: ${date}
-Current season: ${season}
-Days together since first date (4 September 2025): ${daysTogether}
-Recent date suggestions to avoid repeating: ${recentStr}
+  const userMessage = `Today's date: ${date} (${season})
+Days Harry and Nicole have been together: ${daysTogether}
 
-Generate the daily content.`
+Questions asked in the last 7 days — do NOT repeat these or anything similar:
+${recentQStr}
+
+Recent date suggestions to avoid repeating: ${recentTitleStr}
+
+Generate today's daily content.`
 
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
@@ -155,9 +198,9 @@ Generate the daily content.`
 
   let content: {
     question: string
-    questionFact: string
+    fact: string
     wyr: { question: string; optionA: string; optionB: string }
-    interview: { role: string; company: string; description: string; questions: string[] }
+    interview: { role: string; department: string; questions: string[] }
     dateSuggestion: { title: string; description: string; location: string; budget: string; type: string }
   }
   try {
@@ -177,7 +220,7 @@ Generate the daily content.`
 
   batch.set(db.collection('questions').doc(date), {
     question: content.question,
-    fact: content.questionFact,
+    fact: content.fact,
     date,
   }, { merge: true })
 
@@ -188,10 +231,10 @@ Generate the daily content.`
     date,
   }, { merge: true })
 
+  // UI reads 'company' — map department to that field
   batch.set(db.collection('interview').doc(date), {
     role: content.interview.role,
-    company: content.interview.company,
-    description: content.interview.description,
+    company: content.interview.department,
     questions: content.interview.questions,
     date,
   }, { merge: true })

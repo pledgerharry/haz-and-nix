@@ -77,8 +77,8 @@ export default function InterviewPage() {
         <div style={{backgroundColor:'#1E2B1C',borderRadius:'20px',padding:'20px',marginBottom:'12px'}}>
           <div style={{fontSize:'10px',fontWeight:'600',letterSpacing:'0.1em',textTransform:'uppercase',color:'#6A9B63',marginBottom:'8px'}}>Today's role</div>
           <div style={{fontFamily:'Georgia,serif',fontSize:'22px',color:'#F68233',marginBottom:'4px'}}>{interview.role}</div>
-          <div style={{fontSize:'12px',color:'#C3DFB9',marginBottom:'12px'}}>{interview.company}</div>
-          <div style={{fontSize:'13px',color:'#F0EDE6',lineHeight:'1.55',paddingTop:'12px',borderTop:'1px solid rgba(255,255,255,0.08)'}}>{interview.description}</div>
+          <div style={{fontSize:'12px',color:'#C3DFB9',marginBottom: interview.description ? '12px' : '0'}}>{interview.company}</div>
+          {interview.description && <div style={{fontSize:'13px',color:'#F0EDE6',lineHeight:'1.55',paddingTop:'12px',borderTop:'1px solid rgba(255,255,255,0.08)'}}>{interview.description}</div>}
         </div>
 
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px',marginBottom:'10px'}}>
