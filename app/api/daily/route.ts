@@ -80,6 +80,23 @@ async function getRecentSuggestionTitles(db: FirebaseFirestore.Firestore, today:
   return titles
 }
 
+async function getRecentWyrQuestions(db: FirebaseFirestore.Firestore, today: Date): Promise<string[]> {
+  const questions: string[] = []
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    const dateStr = d.toISOString().split('T')[0]
+    try {
+      const snap = await db.collection('wyr').doc(dateStr).get()
+      if (snap.exists) {
+        const data = snap.data()
+        if (data?.question) questions.push(data.question)
+      }
+    } catch { /* skip */ }
+  }
+  return questions
+}
+
 const SYSTEM = `You generate daily personalised content for Harry and Nicole — a couple who call themselves Haz & Nix.
 
 WHO THEY ARE:
@@ -101,8 +118,37 @@ Questions should mostly be about Harry and Nicole specifically — use "me/my" f
 Always include a fun fact loosely related to the question topic. Start the fact with an emoji.
 
 WOULD YOU RATHER:
-Generate one per day. Both options must feel genuinely hard to choose between — no obvious answer. Vary the themes: food, music, travel, relationships, superpowers, daily life, hypotheticals. Occasionally reference their situation naturally: long distance, Cambridge, Croydon, train journeys, days out. Keep it fun but with real tension in the choice.
-Examples of the right vibe: "Would you rather only ever listen to one album forever or never listen to the same song twice?", "Would you rather always arrive an hour early or always arrive ten minutes late?", "Would you rather the train to Cambridge never runs on time, or always runs on time but takes 4 hours?"
+Generate one per day. Both options must feel genuinely hard to choose between — no obvious answer.
+
+Rotate through these categories — never use the same category two days in a row, and vary widely across the week:
+- Food & eating habits
+- Music and listening
+- Social situations
+- Superpowers or hypothetical abilities
+- Daily life trade-offs
+- Relationships and communication
+- Travel (not specifically their train journey)
+- Work and ambition
+- Memory and time
+- Physical experience
+- Technology and modern life
+- Nature and environment
+
+Only reference their long-distance situation or train journeys once every 10 days at most. Do not use train punctuality, seat availability, or journey time as a theme.
+
+Good examples of the right tone and variety:
+- "Would you rather only ever listen to one album forever or never listen to the same song twice?"
+- "Would you rather always know when someone is lying to you or never accidentally lie yourself?"
+- "Would you rather eat the same meal every day but love it, or eat something different every day but it's always just okay?"
+- "Would you rather have a perfect memory or be able to forget anything you choose?"
+- "Would you rather always say exactly what you mean or never be able to explain yourself?"
+- "Would you rather give up hot food forever or give up cold drinks forever?"
+- "Would you rather be fluent in every language or able to play every instrument?"
+- "Would you rather always be slightly too hot or always be slightly too cold?"
+- "Would you rather only be able to read one book a year but remember it perfectly, or read as many as you want but forget them all within a month?"
+- "Would you rather have the ability to pause time but only when you're alone, or fast-forward time but only when you're with other people?"
+
+The choice should have real tension — both options should make someone pause. Avoid anything with an obvious answer.
 
 INTERVIEW MODE:
 Generate one interview role per day. Mix between:
@@ -164,9 +210,10 @@ async function handleDaily() {
 
   const db = adminDb()
 
-  const [recentQuestions, recentTitles] = await Promise.all([
+  const [recentQuestions, recentTitles, recentWyr] = await Promise.all([
     getRecentQuestions(db, now),
     getRecentSuggestionTitles(db, now),
+    getRecentWyrQuestions(db, now),
   ])
 
   const recentQStr = recentQuestions.length > 0
@@ -177,11 +224,18 @@ async function handleDaily() {
     ? recentTitles.map(t => `"${t}"`).join(', ')
     : 'none yet'
 
+  const recentWyrStr = recentWyr.length > 0
+    ? recentWyr.map((q, i) => `${i + 1}. "${q}"`).join('\n')
+    : 'none yet'
+
   const userMessage = `Today's date: ${date} (${season})
 Days Harry and Nicole have been together: ${daysTogether}
 
 Questions asked in the last 7 days — do NOT repeat these or anything similar:
 ${recentQStr}
+
+Would You Rather questions from the last 7 days — do NOT repeat these themes, categories, or settings:
+${recentWyrStr}
 
 Recent date suggestions to avoid repeating: ${recentTitleStr}
 
